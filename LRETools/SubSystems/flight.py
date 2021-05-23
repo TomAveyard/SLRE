@@ -101,6 +101,7 @@ class Flight:
             self.altitudeGraph.append(altitude)
             self.vehicleMassGraph.append(vehicleMass)
 
+            # Converts to absolute values if requested
             if saveAbsoluteValues == False:
                 self.velocityGraph.append(velocity)
                 self.machGraph.append(mach)

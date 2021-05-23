@@ -51,7 +51,7 @@ def idealMixtureRatioCEA(fuel, ox, chamberPressure, ambientPressure=1.01325, con
     output = {
         "Mixture Ratio": idealMixtureRatio,
         "Specific Impulse": I_sp,
-        "Chamber Temperature": chamberPressure,
+        "Chamber Temperature": chamberTemp,
         "Expansion Ratio": expansionRatio,
         "Species Mass Fractions": speciesMassFractions,
         "Throat Molecular Weight": throatMolWtGamma[0],

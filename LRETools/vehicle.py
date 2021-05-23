@@ -3,6 +3,7 @@ import sys
 from math import log
 import LRETools.SubSystems.cea as cea
 import LRETools.SubSystems.flight as flight
+import LRETools.SubSystems.propellant as propellant
 
 class Vehicle:
 
@@ -55,15 +56,15 @@ class Vehicle:
         else:
             sys.exit("dragCurve variable is not given in an accepted format")
 
-    def setFuel(self, fuel, ox):
+    def setFuel(self, fuelName, oxName):
 
-        self.fuel = fuel
-        self.ox = ox
+        self.fuel = propellant.Propellant(fuelName)
+        self.ox = propellant.Propellant(oxName)
 
     def performCEA(self, chamberPressure, nozzleAmbientPressure=1.01325, c='equilibrium', ct='equilibrium', sResolution=0.1, sSearch=2):
 
         self.chamberPressure = chamberPressure
-        ceaOutput = cea.idealMixtureRatioCEA(self.fuel, self.ox, chamberPressure, ambientPressure=nozzleAmbientPressure, condition=c, throatCondition=c, searchResolution=sResolution, startSearch=sSearch)
+        ceaOutput = cea.idealMixtureRatioCEA(self.fuel.ceaName, self.ox.ceaName, chamberPressure, ambientPressure=nozzleAmbientPressure, condition=c, throatCondition=c, searchResolution=sResolution, startSearch=sSearch)
         self.mixtureRatio = ceaOutput["Mixture Ratio"]
         self.specificImpulse = ceaOutput["Specific Impulse"]
         self.chamberTemperature = ceaOutput["Chamber Temperature"]
