@@ -15,6 +15,22 @@ class Flight:
         self.cdValues = cdValues
         self.machValues = machValues
 
+        # Initialise variables that will be defined using other functions
+        self.totalDeltaV = None
+        self.totalDragDeltaV = None
+        self.totalGravityDeltaV = None
+        self.burnTime = None
+        self.timeGraph = None
+        self.altitudeGraph = None
+        self.velocityGraph = None
+        self.machGraph = None
+        self.accelerationGraph = None
+        self.vehicleMassGraph = None
+        self.dragGraph = None
+        self.fig = None
+        self.ax1 = None
+        self.ax2 = None
+
 
     def linearInterpolation(self, xValue, x, y):
 
@@ -89,6 +105,8 @@ class Flight:
         self.accelerationGraph = []
         self.vehicleMassGraph = []
         self.dragGraph = []
+        self.apogee = max(self.altitudeGraph)
+        self.apogeeTime
 
         print("Solving...")
 

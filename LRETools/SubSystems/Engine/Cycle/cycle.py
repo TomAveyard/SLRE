@@ -8,6 +8,33 @@ class ExpanderCycle:
         
         self.fuel = Propellant(fuel)
         self.ox = Propellant(ox)
+
+        # Initialise variables that will be defined using other functions
+        self.fuelTank = None
+        self.oxTank = None
+        self.chamberPressure = None
+        self.chamberTemperature = None
+        self.injectorPressureLoss = None
+        self.fuelMassFlowRate = None
+        self.oxMassFlowRate = None
+        self.fuelPumpEfficiency = None
+        self.oxPumpEfficiency = None
+        self.turbineEfficiency = None
+        self.HXHeatTransferRate = None
+        self.HXPressureLoss = None
+        self.T_g = None
+        self.T_l = None
+        self.h_g = None
+        self.h_l = None
+        self.t_w = None
+        self.k = None
+        self.A = None
+        self.oxPump = None
+        self.fuelPump = None
+        self.injectorInletPressure = None
+        self.regenCooling = None
+        self.turbine = None
+
     
     def setFuelTank(self, fuelTemp, fuelPressure):
 
@@ -110,15 +137,10 @@ class ExpanderCycle:
             # If we want to update the rate of heat transfer with the calculated average liquid side temperature, the following will do that
             if updateHeatTransferEstimate == True:
 
-                # Checks to see if we are using an estimated heat transfer
-                try:
-                    self.T_l
-                    averageRegenCoolingTemp = (self.regenCooling.T + self.fuelPump.T) / 2
-                    self.T_l = averageRegenCoolingTemp
-                    # Recalculates rate of heat transfer
-                    self.setRegenCoolingEstimate(self.T_g, self.T_l, self.h_g, self.t_w, self.k, self.h_l, self.A, self.HXPressureLoss)
-                except:
-                    sys.exit("Solution aborted: updateHeatTransferEstimate=True but the heat transfer rate was set as constant")
+                averageRegenCoolingTemp = (self.regenCooling.T + self.fuelPump.T) / 2
+                self.T_l = averageRegenCoolingTemp
+                # Recalculates rate of heat transfer
+                self.setRegenCoolingEstimate(self.T_g, self.T_l, self.h_g, self.t_w, self.k, self.h_l, self.A, self.HXPressureLoss)
 
             # Calculates turbine outlet state and power
             self.turbine = Turbine(self.fuel.name, self.regenCooling, self.injectorInletPressure, self.turbineEfficiency)

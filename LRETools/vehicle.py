@@ -15,11 +15,14 @@ class Vehicle:
         self.airframe = airframe.Airframe()
         self.engine = engine.Engine(fuel, ox)
 
+        # Initialise variables that will be defined using other functions
         self.fuelMass = None
         self.oxMass = None
         self.propellantMass = None
         self.dryMass = None
         self.wetMass = None
+        self.deltaV = None
+        self.flightSimulation = None
         
     def calculateMasses(self):
 

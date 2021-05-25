@@ -12,6 +12,17 @@ class Propellant:
         self.Tmin = PropsSI(self.name, "Tmin")
         self.Pcrit = PropsSI(self.name, "pcrit")
 
+        # Initialise variables that will be defined using other functions
+        self.symbol = None
+        self.ceaName = None
+        self.type = None
+        self.T = None
+        self.P = None
+        self.D = None
+        self.H = None
+        self.S = None
+        self.Q = None
+
     # Sets all names and symbols that may be needed by various other packages
     # The propellants in this list are the propellants that are currently supported by this class
     def setSymbols(self):

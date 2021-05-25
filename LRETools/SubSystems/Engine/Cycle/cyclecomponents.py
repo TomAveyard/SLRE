@@ -33,6 +33,10 @@ class Pump(Propellant):
         # Defines real state at the outlet
         self.defineState("H", inletState.H - self.deltaHReal, "P", outletPressure)
 
+        # Initialise variables that will be defined using other functions
+        self.massFlowRate = None
+        self.power = None
+
     # Calculates the power required by the pump for a given mass flow rate
     def calculatePower(self, massFlowRate):
 
@@ -59,6 +63,10 @@ class Turbine(Propellant):
 
         # Defines real state at the outlet
         self.defineState("H", inletState.H - self.deltaHReal, "P", outletPressure)
+
+        # Initialise variables that will be defined using other functions
+        self.massFlowRate = None
+        self.power = None
 
     # Calculates the power required by the pump for a given mass flow rate
     def calculatePower(self, massFlowRate):

@@ -13,7 +13,7 @@ class Engine:
         self.cycle = ExpanderCycle(self.fuel.name, self.ox.name)
 
         # Initialise variables that will be defined using other functions
-        self.engineMass = None
+        self.mass = None
         self.chamberPressure = None
         self.thrust = None
         self.expansionRatio = None
@@ -22,6 +22,9 @@ class Engine:
         self.throatMolWtGamma = None
         self.throatMolWt = None
         self.gamma = None
+        self.propellantMassFlowRate = None
+        self.fuelMassFlowRate = None
+        self.oxMassFlowRate = None
 
     def setMass(self, mass):
 
@@ -87,8 +90,8 @@ class Engine:
 
     def findPropellantMassFlowRates(self):
 
-        self.propellantMassFlow = self.thrust / (self.specificImpulse * 9.81)
-        self.fuelMassFlowRate = self.propellantMassFlow / self.idealMixtureRatio
+        self.propellantMassFlowRate = self.thrust / (self.specificImpulse * 9.81)
+        self.fuelMassFlowRate = self.propellantMassFlowRate / self.idealMixtureRatio
         self.oxMassFlowRate = self.fuelMassFlowRate * self.idealMixtureRatio
 
         self.cycle.setMassFlowRate(self.fuelMassFlowRate, self.oxMassFlowRate)

@@ -5,6 +5,7 @@ class Airframe:
 
     def __init__(self):
         
+        # Initialise variables that will be defined using other functions
         self.mass = None
         self.frontalArea = None
         self.cdValues = None
