@@ -1,5 +1,5 @@
 import sys
-from LRETools.SubSystems.Engine.propellant import Propellant
+from LRETools.SubSystems.Engine.Cycle.propellant import Propellant
 from LRETools.SubSystems.Engine.Cycle.cyclecomponents import *
 
 class ExpanderCycle:
@@ -77,7 +77,7 @@ class ExpanderCycle:
         self.HXPressureLoss = pressureLoss
 
     # If the rate of heat transfer is not known, it can be estimated with 7 parameters set in this function
-    def setRegenCoolingEstimate(self, T_g, T_l, h_g, t_w, k, h_l, A, pressureLoss):
+    def setRegenCoolingEstimate(self, h_g, h_l, T_g, T_l, t_w, k, A, pressureLoss):
 
         # T_g = gas-side temperature
         self.T_g = T_g

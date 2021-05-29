@@ -22,7 +22,7 @@ karmanAlpha.engine.cycle.setInjector(1e5)
 karmanAlpha.engine.cycle.setFuelPumpEfficiency(0.7)
 karmanAlpha.engine.cycle.setOxPumpEfficiency(0.7)
 karmanAlpha.engine.cycle.setTurbineEfficiency(0.7)
-karmanAlpha.engine.cycle.setRegenCoolingEstimate(karmanAlpha.engine.chamberTemp, 300, 147 * 5, 4/1e3, 400, 205900, 0.2785, 9e5)
+karmanAlpha.engine.cycle.setRegenCoolingEstimate(147 * 5, 205900, karmanAlpha.engine.chamberTemp, 300, 4/1e3, 400, 0.2785, 9e5)
 karmanAlpha.engine.cycle.solveCycle()
 
 # Draw cycle

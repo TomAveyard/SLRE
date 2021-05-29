@@ -1,6 +1,6 @@
 import sys
 from rocketcea.cea_obj_w_units import CEA_Obj
-from LRETools.SubSystems.Engine.propellant import Propellant
+from LRETools.SubSystems.Engine.Cycle.propellant import Propellant
 from LRETools.SubSystems.Engine.Cycle.cycle import *
 
 class Engine:
@@ -11,6 +11,9 @@ class Engine:
         self.ox = Propellant(oxName)
 
         self.cycle = ExpanderCycle(self.fuel.name, self.ox.name)
+
+        print(self.fuel.ceaName)
+        print(self.cycle.fuel.ceaName)
 
         # Initialise variables that will be defined using other functions
         self.mass = None

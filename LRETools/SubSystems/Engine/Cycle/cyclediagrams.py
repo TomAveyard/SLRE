@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from LRETools.SubSystems.Engine.propellant import Propellant
+from LRETools.SubSystems.Engine.Cycle.propellant import Propellant
 from math import ceil, floor
 
 class TSCycleDiagram:
