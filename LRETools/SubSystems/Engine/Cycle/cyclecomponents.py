@@ -1,4 +1,4 @@
-from LRETools.SubSystems.Engine.propellant import Propellant
+from LRETools.SubSystems.Engine.Cycle.propellant import Propellant
 
 # Defines state of propellant in the tank from the stated temperature and pressure of the tank
 class Tank(Propellant):

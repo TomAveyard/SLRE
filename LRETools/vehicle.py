@@ -4,7 +4,7 @@ from math import log
 import LRETools.SubSystems.Body.airframe as airframe
 import LRETools.SubSystems.Engine.engine as engine
 import LRETools.SubSystems.FlightSimulation.flight as flight
-import LRETools.SubSystems.Engine.propellant as propellant
+import LRETools.SubSystems.Engine.Cycle.propellant as propellant
 
 class Vehicle:
 

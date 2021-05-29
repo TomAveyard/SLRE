@@ -5,6 +5,9 @@ class Propellant:
     def __init__(self, name):
 
         self.name = name
+        self.symbol = None
+        self.ceaName = None
+        self.type = None
         self.setSymbols()
         # List of properties that can be defined for a propellant
         self.properties = ["T", "P", "D", "H", "S", "Q"]
@@ -13,9 +16,6 @@ class Propellant:
         self.Pcrit = PropsSI(self.name, "pcrit")
 
         # Initialise variables that will be defined using other functions
-        self.symbol = None
-        self.ceaName = None
-        self.type = None
         self.T = None
         self.P = None
         self.D = None
@@ -26,7 +26,7 @@ class Propellant:
     # Sets all names and symbols that may be needed by various other packages
     # The propellants in this list are the propellants that are currently supported by this class
     def setSymbols(self):
-
+        
         if self.name == "Methane":
             self.symbol = "CH4"
             self.ceaName = "CH4"
