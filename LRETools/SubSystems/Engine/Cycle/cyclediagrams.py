@@ -50,7 +50,10 @@ class TSCycleDiagram:
             state.defineState("P", pressure, "S", i)
             yCoords.append(state.T)
 
+            lastCoord = [i, state.T]
+
         self.ax.plot(xCoords, yCoords, color=colour, lw=lw)
+        self.ax.annotate(str(round(pressure, -4) / 1e5) + " [Bar]", xy=(lastCoord[0], lastCoord[1]), xycoords='data', xytext=(0, 5), textcoords='offset points', color='Gray', alpha=0.5, fontsize="xx-small")
 
     # Draws a saturation curve on the diagram
     def saturationCurve(self):
@@ -81,12 +84,13 @@ class TSCycleDiagram:
         self.ax.plot(xCoords, yCoords, color='black')
 
     # Plots the critical point on the diagram
-    def criticalPoint(self, s=1):
+    def criticalPoint(self, s=2):
 
         state = Propellant(self.substance)
         state.defineState("T", state.Tcrit, "P", state.Pcrit)
 
         self.ax.scatter(state.S, state.T, s=s)
+        self.ax.annotate("Critical Point", xy=(state.S, state.T), xycoords='data', xytext=(0, 2), textcoords='offset points', color='Gray', alpha=0.5, fontsize="xx-small")
 
     # For a process that involves change in pressure, temperature, and entropy, this will plot through intermediate states in a linear fashion
     def lineInterpolation(self, tempLims, pressureLims, resolution=1, colour='red', lw=2):
@@ -141,6 +145,9 @@ class TSCycleDiagram:
         self.ax.plot([tankState.S, pumpState.S], [tankState.T, pumpState.T], color='red', lw=2)
         self.lineInterpolation([pumpState.T, regenState.T], [pumpState.P, regenState.P])
         self.ax.plot([regenState.S, turbineState.S], [regenState.T, turbineState.T], color='red', lw=2)
+
+        self.ax.set_xlabel("Entropy [J K^-1]")
+        self.ax.set_ylabel("Temperature [K]")
 
         plt.show()
         

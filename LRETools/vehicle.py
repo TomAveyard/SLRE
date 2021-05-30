@@ -36,7 +36,7 @@ class Vehicle:
         
         self.deltaV = self.engine.specificImpulse * self.G * log(self.wetMass / self.dryMass)
 
-    def flightSimulation(self, timeStep=0.1, variablesToPlot="All", showPlot=False, saveFileName="Simulation.png", plotAbsoluteValues=True):
+    def performFlightSimulation(self, timeStep=0.1, variablesToPlot="All", showPlot=False, saveFileName="Simulation.png", plotAbsoluteValues=True):
         
         self.flightSimulation = flight.Flight(self.airframe.frontalArea, self.airframe.cdValues, self.airframe.machValues)
         self.flightSimulation.flightSimulation(self.wetMass, self.propellantMass, self.engine.thrust, self.engine.specificImpulse, timeStep=timeStep, saveAbsoluteValues=plotAbsoluteValues)
