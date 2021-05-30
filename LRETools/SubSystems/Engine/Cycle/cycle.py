@@ -78,20 +78,24 @@ class ExpanderCycle:
 
     # If the rate of heat transfer is not known, it can be estimated with 7 parameters set in this function
     def setRegenCoolingEstimate(self, h_g, h_l, T_g, T_l, t_w, k, A, pressureLoss):
-
+        
+        # h_g = gas-side coefficient
+        self.h_g = h_g
+        # h_l = liquid-side coefficient
+        self.h_l = h_l
         # T_g = gas-side temperature
         self.T_g = T_g
         # T_l = liquid-side temperature. The value provided here is an initial guess
         self.T_l = T_l
-        self.h_g = h_g
+        # t_w = wall thickness
         self.t_w = t_w
+        # k = conductivity
         self.k = k
-        self.h_l = h_l
         # A = area over which heat transfer takes place
         self.A = A
 
-        heatTransferRatePerArea = (T_g - T_l) / ((1 / h_g) + (t_w / k) + (1 / h_l))
-        heatTransferRate = heatTransferRatePerArea * A
+        heatTransferRatePerArea = (self.T_g - self.T_l) / ((1 / self.h_g) + (self.t_w / self.k) + (1 / self.h_l))
+        heatTransferRate = heatTransferRatePerArea * self.A
 
         self.HXHeatTransferRate = heatTransferRate
         self.HXPressureLoss = pressureLoss
@@ -140,7 +144,7 @@ class ExpanderCycle:
                 averageRegenCoolingTemp = (self.regenCooling.T + self.fuelPump.T) / 2
                 self.T_l = averageRegenCoolingTemp
                 # Recalculates rate of heat transfer
-                self.setRegenCoolingEstimate(self.T_g, self.T_l, self.h_g, self.t_w, self.k, self.h_l, self.A, self.HXPressureLoss)
+                self.setRegenCoolingEstimate(self.h_g, self.h_l, self.T_g, self.T_l, self.t_w, self.k, self.A, self.HXPressureLoss)
 
             # Calculates turbine outlet state and power
             self.turbine = Turbine(self.fuel.name, self.regenCooling, self.injectorInletPressure, self.turbineEfficiency)

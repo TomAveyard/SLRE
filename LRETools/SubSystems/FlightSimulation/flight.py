@@ -27,6 +27,8 @@ class Flight:
         self.accelerationGraph = None
         self.vehicleMassGraph = None
         self.dragGraph = None
+        self.apogee = None
+        self.apogeeTime = None
         self.fig = None
         self.ax1 = None
         self.ax2 = None
@@ -105,8 +107,6 @@ class Flight:
         self.accelerationGraph = []
         self.vehicleMassGraph = []
         self.dragGraph = []
-        self.apogee = max(self.altitudeGraph)
-        self.apogeeTime
 
         print("Solving...")
 
@@ -226,7 +226,15 @@ class Flight:
         self.ax1.set_xlim([0, self.timeGraph[-1]])
         self.ax2.set_ylim(bottom=0)
 
-        plt.savefig(fileName)
+        self.ax1.set_xlabel("Time [s]")
+        self.ax1.set_ylabel("Altitude [m]")
+        self.ax2.set_ylabel("Other [varying units]")
+
+        self.ax1.legend(loc="upper left")
+        self.ax2.legend(loc='upper right')
+
+        if fileName != None:
+            plt.savefig(fileName)
         
         if show == True:
             plt.show()

@@ -12,9 +12,6 @@ class Engine:
 
         self.cycle = ExpanderCycle(self.fuel.name, self.ox.name)
 
-        print(self.fuel.ceaName)
-        print(self.cycle.fuel.ceaName)
-
         # Initialise variables that will be defined using other functions
         self.mass = None
         self.chamberPressure = None
