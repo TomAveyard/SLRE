@@ -5,15 +5,13 @@ from numpy import save
 
 class Flight:
 
-    def __init__(self, frontalArea, cdValues, machValues):
+    def __init__(self, Vehicle):
 
         self.G = 9.81
         self.AIR_GAMMA = 1.4
         self.AIR_R = 287
 
-        self.frontalArea = frontalArea
-        self.cdValues = cdValues
-        self.machValues = machValues
+        self.vehicle = Vehicle
 
         # Initialise variables that will be defined using other functions
         self.totalDeltaV = None
@@ -69,18 +67,18 @@ class Flight:
 
     def findDrag(self, mach, altitude):
 
-        CD = self.linearInterpolation(abs(mach), self.machValues, self.cdValues)
+        CD = self.linearInterpolation(abs(mach), self.vehicle.airframe.machValues, self.vehicle.airframe.cdValues)
         if altitude < 80000:
             atmosphere = Atmosphere(altitude)
             soundSpeed = self.findSoundSpeed(float(atmosphere.temperature))
             velocity = mach * soundSpeed
-            drag = 0.5 * CD * float(atmosphere.density[0]) * (velocity ** 2) * self.frontalArea
+            drag = 0.5 * CD * float(atmosphere.density[0]) * (velocity ** 2) * self.vehicle.airframe.frontalArea
         else:
             drag = 0
 
         return(drag)
 
-    def flightSimulation(self, vehicleMass, propellantMass, thrust, specificImpulse, timeStep=0.1, saveAbsoluteValues=True):
+    def flightSimulation(self, timeStep=0.1, saveAbsoluteValues=True):
         
         # Initialise temporary variables for simulation loop
         altitude = 0
@@ -92,6 +90,10 @@ class Flight:
         time = 0
         timeStepImpulse = 0
         timeStepPropellantMassConsumption = 0
+        vehicleMass = self.vehicle.wetMass
+        propellantMass = self.vehicle.propellantMass
+        thrust = self.vehicle.engine.thrust
+        specificImpulse = self.vehicle.engine.specificImpulse
 
         # Initialise variables to be saved for simulation loop
         self.totalDeltaV = 0
@@ -183,20 +185,20 @@ class Flight:
         self.apogee = max(self.altitudeGraph)
         self.apogeeTime = self.timeGraph[self.altitudeGraph.index(max(self.altitudeGraph))]
 
-    def plotGraph(self, variablesToPlot="All", show=False, lw=2, fileName="Simulation.png"):
+    def plotGraph(self, variablesToPlot="All", show=True, lw=2, fileName="Simulation.png"):
 
         self.fig = plt.figure()
         self.ax1 = self.fig.add_subplot(111)
 
         if variablesToPlot == "All":
             
-            self.ax1.plot(self.timeGraph, self.altitudeGraph, linewidth=lw)
+            self.ax1.plot(self.timeGraph, self.altitudeGraph, linewidth=lw, label="Altitude")
             self.ax2 = self.ax1.twinx()
-            self.ax2.plot(self.timeGraph, self.velocityGraph, linewidth=lw)
-            self.ax2.plot(self.timeGraph, self.accelerationGraph, linewidth=lw)
-            self.ax2.plot(self.timeGraph, self.machGraph, linewidth=lw)
-            self.ax2.plot(self.timeGraph, self.vehicleMassGraph, linewidth=lw)
-            self.ax2.plot(self.timeGraph, self.dragGraph, linewidth=lw)
+            self.ax2.plot(self.timeGraph, self.velocityGraph, linewidth=lw, label="Velocity")
+            self.ax2.plot(self.timeGraph, self.accelerationGraph, linewidth=lw, label="Acceleration")
+            self.ax2.plot(self.timeGraph, self.machGraph, linewidth=lw, label="Mach")
+            self.ax2.plot(self.timeGraph, self.vehicleMassGraph, linewidth=lw, label="Vehicle Mass")
+            self.ax2.plot(self.timeGraph, self.dragGraph, linewidth=lw, label="Drag")
         
         elif type(variablesToPlot) is list:
 

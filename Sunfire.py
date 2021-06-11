@@ -1,4 +1,5 @@
 from LRETools import vehicle
+from LRETools.SubSystems.FlightSimulation.flight import Flight
 import LRETools.SubSystems.Engine.Cycle.cyclediagrams as cyclediagrams
 
 sunfire = vehicle.Vehicle("Sunfire", "Methane", "Oxygen")
@@ -13,7 +14,7 @@ sunfire.engine.findPropellantMassFlowRates()
 # Define airframe parameters
 sunfire.airframe.setMass(30)
 sunfire.airframe.setDragCharacteristics(0.11, "dragCurve.csv")
-sunfire.airframe.setTotalTankVolume(0.2)
+sunfire.airframe.setTotalTankVolume(0.03)
 
 # Define engine cycle parameters
 sunfire.engine.cycle.setFuelTank(100, 3e5)
@@ -24,7 +25,7 @@ sunfire.engine.cycle.setOxPumpEfficiency(0.7)
 sunfire.engine.cycle.setTurbineEfficiency(0.7)
 sunfire.engine.cycle.setRegenCoolingEstimate(147*5, 205900, sunfire.engine.chamberTemp, 300, 4/1e3, 400, 0.2785, 9e5)
 
-simulate = "cycle"
+simulate = "flight"
 
 if simulate == "cycle":
     # Draw cycle
@@ -37,4 +38,7 @@ elif simulate == "flight":
     # Perform flight simulation
     sunfire.calculateMasses()
     sunfire.calculateDeltaV()
-    sunfire.performFlightSimulation(timeStep=0.1, showPlot=True, variablesToPlot=["Altitude", "Velocity"])
+    
+    flightSim = Flight(sunfire)
+    flightSim.flightSimulation()
+    flightSim.plotGraph()
