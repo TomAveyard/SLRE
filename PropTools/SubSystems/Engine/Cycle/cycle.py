@@ -1,6 +1,6 @@
 import sys
-from LRETools.SubSystems.Engine.Cycle.propellant import Propellant
-from LRETools.SubSystems.Engine.Cycle.cyclecomponents import *
+from PropTools.SubSystems.Engine.Cycle.propellant import Propellant
+from PropTools.SubSystems.Engine.Cycle.cyclecomponents import *
 
 class ExpanderCycle:
 

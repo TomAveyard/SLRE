@@ -1,8 +1,8 @@
 import csv
 import sys
 from math import log
-import LRETools.SubSystems.Body.airframe as airframe
-import LRETools.SubSystems.Engine.engine as engine
+import PropTools.SubSystems.Body.airframe as airframe
+import PropTools.SubSystems.Engine.engine as engine
 
 class Vehicle:
 

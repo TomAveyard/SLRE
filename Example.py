@@ -1,6 +1,6 @@
-from LRETools import vehicle
-from LRETools.FlightSimulation.flight import Flight
-from LRETools.SubSystems.Engine.Cycle.cyclediagrams import *
+from PropTools import vehicle
+from PropTools.FlightSimulation.flight import Flight
+from PropTools.SubSystems.Engine.Cycle.cyclediagrams import *
 
 expanderExample = vehicle.Vehicle("Expander Example", "Methane", "Oxygen")
 
