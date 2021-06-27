@@ -1,5 +1,5 @@
 import sys
-from PropTools.SubSystems.Engine.Cycle.propellant import Propellant
+from PropTools.SubSystems.Engine.Cycle.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.Cycle.cyclecomponents import *
 
 class ExpanderCycle:
