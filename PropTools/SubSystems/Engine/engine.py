@@ -1,6 +1,6 @@
 import sys
 from rocketcea.cea_obj_w_units import CEA_Obj
-from PropTools.SubSystems.Engine.Cycle.propellant import Propellant
+from PropTools.SubSystems.Engine.Cycle.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.Cycle.cycle import *
 
 class Engine:

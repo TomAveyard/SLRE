@@ -1,4 +1,4 @@
-from PropTools.SubSystems.Engine.Cycle.propellant import Propellant
+from PropTools.SubSystems.Engine.Cycle.Propellant.propellant import Propellant
 
 # Defines state of propellant in the tank from the stated temperature and pressure of the tank
 class Tank(Propellant):
