@@ -82,6 +82,20 @@ class Propellant:
             self.ceaName = "Ethanol"
             self.type = "Fuel"
             self.mixture = False
+
+        if self.name == "Isopropanol":
+            self.symbol = "C3H8O"
+            self.ceaName = "Isopropanol"
+            self.type = "Fuel"
+            self.mixture = False
+            self.library = "Thermo"
+
+        if self.name == "Dodecane":
+            self.symbol = "C12H26"
+            self.ceaName = "Kerosene"
+            self.type = "Fuel"
+            self.mixture = False
+            self.library = "Thermo"
         
         # Oxidisers
 
@@ -93,7 +107,7 @@ class Propellant:
 
         if self.name == "Hydrogen Peroxide 90":
             self.symbol = "H2O2"
-            self.ceaName = "90_H202"
+            self.ceaName = "90_H2O2"
             self.type = "Ox"
             # Override library as H2O2 is not available in CoolProp
             self.library = "Thermo"
@@ -105,7 +119,7 @@ class Propellant:
 
         if self.name == "Hydrogen Peroxide 98":
             self.symbol = "H2O2"
-            self.ceaName = "98_H202"
+            self.ceaName = "98_H2O2"
             self.type = "Ox"
             # Override library as H2O2 is not available in CoolProp
             self.library = "Thermo"
@@ -114,6 +128,13 @@ class Propellant:
                 "hydrogen peroxide": 0.98,
                 "water": 0.02
             }
+
+        if self.name == "Nitrous Oxide":
+            self.symbol = "N2O"
+            self.ceaName = "N2O"
+            self.type = "Ox"
+            self.mixture = False
+            self.library = "Thermo"
 
     # Defines the entire state of the propellant and the point specified by 2 properties of choice
     def defineState(self, property1, property1Value, property2, property2Value):

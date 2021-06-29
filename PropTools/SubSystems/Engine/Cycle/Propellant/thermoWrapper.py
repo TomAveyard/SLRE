@@ -2,7 +2,6 @@ from re import M
 import sys
 from numpy.ma import average
 from thermo import ChemicalConstantsPackage, PRMIX, CEOSLiquid, CEOSGas, FlashPureVLS, FlashVL
-import thermo
 from thermo.interaction_parameters import IPDB
 
 class thermoWrapper:
