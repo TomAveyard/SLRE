@@ -1,10 +1,12 @@
 import sys
 from CoolProp.CoolProp import PropsSI
 import PropTools.SubSystems.Engine.Cycle.Propellant.thermoWrapper as tw
+import json
+from PropTools.Utils.fileHandling import openFromRelativePath
 
 class Propellant:
 
-    def __init__(self, name, library="CoolProp"):
+    def __init__(self, name, library=None):
 
         self.name = name
         self.symbol = None
@@ -12,8 +14,10 @@ class Propellant:
         self.type = None
         self.mixture = None
         self.components = None
-        self.library = library
         self.setSymbols()
+        
+        if library != None:
+            self.library = library
 
         # List of properties that can be defined for a propellant
         self.properties = ["T", "P", "D", "H", "S", "Q"]
@@ -27,10 +31,14 @@ class Propellant:
         elif self.library == "Thermo":
 
             if self.mixture == False:
+
                 self.chemical = tw.thermoWrapper(self.name)
+
             elif self.mixture == True:
+
                 substances = list(self.components.keys())
                 massFractions = []
+
                 for s in substances:
                     massFractions.append(self.components[s])
                      
@@ -53,88 +61,22 @@ class Propellant:
         self.S = None
         self.Q = None
 
-    # Sets all names and symbols that may be needed by various other packages
-    # The propellants in this list are the propellants that are currently supported by this class
+    # Loads settings for propellant from propellantData.json file where these are stored
     def setSymbols(self):
         
-        # Fuels
+        f = openFromRelativePath("PropTools/SubSystems/Engine/Cycle/Propellant/propellantData.json")
+        data = json.load(f)
 
-        if self.name == "Methane":
-            self.symbol = "CH4"
-            self.ceaName = "CH4"
-            self.type = "Fuel"
-            self.mixture = False
-
-        if self.name == "Propane":
-            self.symbol = "C3H8"
-            self.ceaName = "Ethanol"
-            self.type = "Fuel"
-            self.mixture = False
+        data = data[self.name.lower()]
         
-        if self.name == "Methanol":
-            self.symbol = "CH4O"
-            self.ceaName = "Methanol"
-            self.type = "Fuel"
-            self.mixture = False
+        self.symbol = data["symbol"]
+        self.ceaName = data["ceaName"]
+        self.type = data["type"]
+        self.mixture = data["mixture"]
+        self.components = data["components"]
+        self.library = data["defaultLibrary"]
 
-        if self.name == "Ethanol":
-            self.symbol = "C2H6O"
-            self.ceaName = "Ethanol"
-            self.type = "Fuel"
-            self.mixture = False
-
-        if self.name == "Isopropanol":
-            self.symbol = "C3H8O"
-            self.ceaName = "Isopropanol"
-            self.type = "Fuel"
-            self.mixture = False
-            self.library = "Thermo"
-
-        if self.name == "Dodecane":
-            self.symbol = "C12H26"
-            self.ceaName = "Kerosene"
-            self.type = "Fuel"
-            self.mixture = False
-            self.library = "Thermo"
-        
-        # Oxidisers
-
-        if self.name == "Oxygen":
-            self.symbol = "O2"
-            self.ceaName = "LOX"
-            self.type = "Ox"
-            self.mixture = False
-
-        if self.name == "Hydrogen Peroxide 90":
-            self.symbol = "H2O2"
-            self.ceaName = "90_H2O2"
-            self.type = "Ox"
-            # Override library as H2O2 is not available in CoolProp
-            self.library = "Thermo"
-            self.mixture = True
-            self.components = {
-                "hydrogen peroxide": 0.9,
-                "water": 0.1
-            }
-
-        if self.name == "Hydrogen Peroxide 98":
-            self.symbol = "H2O2"
-            self.ceaName = "98_H2O2"
-            self.type = "Ox"
-            # Override library as H2O2 is not available in CoolProp
-            self.library = "Thermo"
-            self.mixture = True
-            self.components = {
-                "hydrogen peroxide": 0.98,
-                "water": 0.02
-            }
-
-        if self.name == "Nitrous Oxide":
-            self.symbol = "N2O"
-            self.ceaName = "N2O"
-            self.type = "Ox"
-            self.mixture = False
-            self.library = "Thermo"
+        f.close()
 
     # Defines the entire state of the propellant and the point specified by 2 properties of choice
     def defineState(self, property1, property1Value, property2, property2Value):
