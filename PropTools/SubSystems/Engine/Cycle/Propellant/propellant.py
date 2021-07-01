@@ -15,7 +15,7 @@ class Propellant:
         self.mixture = None
         self.components = None
         self.setSymbols()
-        
+
         if library != None:
             self.library = library
 
@@ -30,11 +30,11 @@ class Propellant:
 
         elif self.library == "Thermo":
 
-            if self.mixture == False:
+            if self.mixture == "False":
 
                 self.chemical = tw.thermoWrapper(self.name)
 
-            elif self.mixture == True:
+            elif self.mixture == "True":
 
                 substances = list(self.components.keys())
                 massFractions = []
