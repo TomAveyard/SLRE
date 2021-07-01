@@ -13,7 +13,7 @@ expanderExample.engine.findPropellantMassFlowRates()
 
 # Define airframe parameters
 expanderExample.airframe.setMass(30)
-expanderExample.airframe.setDragCharacteristics(0.11, "dragCurve.csv")
+expanderExample.airframe.setDragCharacteristics(0.11, "Scripts/dragCurve.csv")
 expanderExample.airframe.setTotalTankVolume(0.03)
 
 # Define engine cycle parameters

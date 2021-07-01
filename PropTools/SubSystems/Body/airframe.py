@@ -1,5 +1,7 @@
+from posixpath import relpath
 import sys
 import csv
+from PropTools.Utils.fileHandling import openFromRelativePath
 
 class Airframe:
 
@@ -24,11 +26,15 @@ class Airframe:
         if type(dragCurve) is str:
             machList = []
             cdList = []
-            with open(dragCurve) as file:
-                reader = csv.reader(file)
-                for row in reader:
-                    machList.append(row[0])
-                    cdList.append(row[1])
+
+            file = openFromRelativePath(dragCurve)
+
+            reader = csv.reader(file)
+            for row in reader:
+                machList.append(row[0])
+                cdList.append(row[1])
+
+            file.close()
             
             self.cdValues = machList
             self.machValues = cdList
