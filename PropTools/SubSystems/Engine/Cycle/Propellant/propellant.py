@@ -104,6 +104,7 @@ class Propellant:
             for property in propertiesToSolve:
                 
                 if self.library == "CoolProp":
+                    
                     propertiesDict[property] = PropsSI(property, property1, property1Value, property2, property2Value, self.name)
 
                 elif self.library == "Thermo":
