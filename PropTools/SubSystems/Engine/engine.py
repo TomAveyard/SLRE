@@ -45,17 +45,27 @@ class Engine:
 
         # Converts equlibirum/frozen statements into a flag for the CEA functions
         if condition == 'equilibrium':
+
             c = 0
+
         elif condition == 'frozen':
+
             c = 1
+
         else:
+
             sys.exit('CEA condition can only be "equilibrium" or "frozen"')
         
         if throatCondition == 'equilibrium':
+
             ct = 0
+
         elif throatCondition == 'frozen':
+
             ct = 1
+
         else:
+            
             sys.exit('CEA throat condition can only be "equilibrium" or "frozen"')
 
         # Initialises variables for following loop

@@ -1,0 +1,104 @@
+{
+    "dodecane": {
+        "symbol": "C12H26",
+        "ceaName": "Kerosene",
+        "type": "Fuel",
+        "mixture": "False",
+        "defaultLibrary": "Thermo",
+        "components": {
+            "dodecane": 1
+        }
+    },
+    "ethanol": {
+        "symbol": "C2H6O",
+        "ceaName": "Ethanol",
+        "type": "Fuel",
+        "mixture": "False",
+        "defaultLibrary": "CoolProp",
+        "components": {
+            "Ethanol": 1
+        }
+    },
+    "hydrogen peroxide 90": {
+        "symbol": "H2O2",
+        "ceaName": "90_H2O2",
+        "type": "Ox",
+        "mixture": "True",
+        "defaultLibrary": "Thermo",
+        "components": {
+            "Hydrogen Peroxide": 0.9,
+            "Water": 0.1
+        }
+    },
+    "hydrogen peroxide 98": {
+        "symbol": "H2O2",
+        "ceaName": "98_H2O2",
+        "type": "Ox",
+        "mixture": "True",
+        "defaultLibrary": "Thermo",
+        "components": {
+            "Hydrogen Peroxide": 0.98,
+            "Water": 0.02
+        }
+    },
+    "isopropanol": {
+        "symbol": "C3H8O",
+        "ceaName": "Isopropanol",
+        "type": "Fuel",
+        "mixture": "False",
+        "defaultLibrary": "Thermo",
+        "components": {
+            "Isopropanol": 1
+        }
+    },
+    "methane": {
+        "symbol": "CH4",
+        "ceaName": "CH4",
+        "type": "Fuel",
+        "mixture": "False",
+        "defaultLibrary": "CoolProp",
+        "components": {
+            "Methane": 1
+        }
+    },
+    "methanol": {
+        "symbol": "CH4O",
+        "ceaName": "Methanol",
+        "type": "Fuel",
+        "mixture": "False",
+        "defaultLibrary": "CoolProp",
+        "components": {
+            "Methanol": 1
+        }
+    },
+    "nitrous oxide": {
+        "symbol": "N2O",
+        "ceaName": "N2O",
+        "type": "Ox",
+        "mixture": "False",
+        "defaultLibrary": "Thermo",
+        "components": {
+            "Nitrous Oxide": 1
+        }
+    },
+    "oxygen": {
+        "symbol": "O2",
+        "ceaName": "LOX",
+        "type": "Ox",
+        "mixture": "False",
+        "defaultLibrary": "CoolProp",
+        "components": {
+            "Oxygen": 1
+        }
+    },
+    "propane": {
+        "symbol": "C3H8",
+        "ceaName": "Propane",
+        "type": "Fuel",
+        "mixture": "False",
+        "defaultLibrary": "CoolProp",
+        "components": {
+            "Propane": 1
+        }
+    }
+}

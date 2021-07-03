@@ -100,7 +100,7 @@ class ExpanderCycle:
         self.HXHeatTransferRate = heatTransferRate
         self.HXPressureLoss = pressureLoss
 
-    def solveCycle(self, searchInterval=100000, accuracy=1, searchDivision=2, updateHeatTransferEstimate=True):
+    def solveExpanderCycle(self, searchInterval=100000, accuracy=1, searchDivision=2, updateHeatTransferEstimate=True):
 
         # Counter for number of iterations
         count = 0
@@ -155,8 +155,11 @@ class ExpanderCycle:
             
             # Adjust searching parameter to achieve higher accuracy
             if -totalPumpPower > self.turbine.power and searchInterval < 0:
+
                 searchInterval = -searchInterval / searchDivision
+
             elif -totalPumpPower < self.turbine.power and searchInterval > 0:
+
                 searchInterval = -searchInterval / searchDivision
 
             count = count + 1

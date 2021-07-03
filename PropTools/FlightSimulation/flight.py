@@ -48,9 +48,11 @@ class Flight:
         for i in range(len(x)):
             
             if x[i] == xValue:
+
                 return y[i]
 
             elif x[i] < xValue and x[i+1] > xValue:
+
                 x1 = x[i]
                 x2 = x[i+1]
                 y1 = y[i]
@@ -68,12 +70,16 @@ class Flight:
     def findDrag(self, mach, altitude):
 
         CD = self.linearInterpolation(abs(mach), self.vehicle.airframe.machValues, self.vehicle.airframe.cdValues)
+
         if altitude < 80000:
+
             atmosphere = Atmosphere(altitude)
             soundSpeed = self.findSoundSpeed(float(atmosphere.temperature))
             velocity = mach * soundSpeed
             drag = 0.5 * CD * float(atmosphere.density[0]) * (velocity ** 2) * self.vehicle.airframe.frontalArea
+
         else:
+
             drag = 0
 
         return(drag)
@@ -153,10 +159,13 @@ class Flight:
 
             # Calculate mach number for the timestep
             if altitude < 80000:
+
                 atmosphere = Atmosphere(altitude)
                 soundSpeed = self.findSoundSpeed(float(atmosphere.temperature))
                 mach = velocity / soundSpeed
+
             else:
+
                 mach = 0
 
             # Calculate impulse experienced during timestep, and the amount of fuel that impulse required
@@ -169,9 +178,11 @@ class Flight:
 
             # Update thrust according to whether fuel has run out or not
             if propellantMass <= 0 and burnOut == False:
+
                 thrust = 0
                 self.burnTime = time
                 burnOut = True
+
             elif propellantMass > 0:
                 self.totalDeltaV = self.totalDeltaV + (thrust / vehicleMass) * timeStep
                 self.totalDragDeltaV = self.totalDragDeltaV + (drag / vehicleMass) * timeStep
@@ -203,20 +214,32 @@ class Flight:
         elif type(variablesToPlot) is list:
 
             if "Altitude" in variablesToPlot:
+
                 self.ax1.plot(self.timeGraph, self.altitudeGraph, linewidth=lw, label="Altitude", color="Black")
                 self.ax2 = self.ax1.twinx()
+
             elif "Altitude" not in variablesToPlot:
+
                 self.ax2 = self.ax1
 
             if "Velocity" in variablesToPlot:
+
                 self.ax2.plot(self.timeGraph, self.velocityGraph, linewidth=lw, label="Velocity")
+
             if "Acceleration" in variablesToPlot:
+
                 self.ax2.plot(self.timeGraph, self.accelerationGraph, linewidth=lw, label="Acceleration")
+
             if "Mach" in variablesToPlot:
+
                 self.ax2.plot(self.timeGraph, self.machGraph, linewidth=lw, label="Mach")
+
             if "Vehicle Mass" in variablesToPlot:
+
                 self.ax2.plot(self.timeGraph, self.vehicleMassGraph, linewidth=lw, label="Vehicle Mass")
+
             if "Drag" in variablesToPlot:
+
                 self.ax2.plot(self.timeGraph, self.dragGraph, linewidth=lw, label="Drag")
             
         plt.axvline(x=self.burnTime, lw=1, alpha=0.5, color="Gray")
@@ -236,7 +259,9 @@ class Flight:
         self.ax2.legend(loc='upper right')
 
         if fileName != None:
+
             plt.savefig(fileName)
         
         if show == True:
+            
             plt.show()
