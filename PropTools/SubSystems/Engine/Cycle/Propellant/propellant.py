@@ -1,5 +1,5 @@
 import sys
-from CoolProp.CoolProp import PropsSI
+import CoolProp.CoolProp as CP
 import PropTools.SubSystems.Engine.Cycle.Propellant.thermoWrapper as tw
 import json
 from PropTools.Utils.fileHandling import openFromRelativePath
@@ -24,9 +24,11 @@ class Propellant:
 
         if self.library == "CoolProp":
 
-            self.Tcrit = PropsSI(self.name, "Tcrit")
-            self.Tmin = PropsSI(self.name, "Tmin")
-            self.Pcrit = PropsSI(self.name, "pcrit")
+            CP.set_reference_state(self.name, "NBP")
+
+            self.Tcrit = CP.PropsSI(self.name, "Tcrit")
+            self.Tmin = CP.PropsSI(self.name, "Tmin")
+            self.Pcrit = CP.PropsSI(self.name, "pcrit")
 
         elif self.library == "Thermo":
 
@@ -105,7 +107,7 @@ class Propellant:
                 
                 if self.library == "CoolProp":
                     
-                    propertiesDict[property] = PropsSI(property, property1, property1Value, property2, property2Value, self.name)
+                    propertiesDict[property] = CP.PropsSI(property, property1, property1Value, property2, property2Value, self.name)
 
                 elif self.library == "Thermo":
                     

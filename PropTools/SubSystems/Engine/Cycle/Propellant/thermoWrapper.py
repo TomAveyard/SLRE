@@ -1,6 +1,4 @@
-from re import M
 import sys
-from numpy.ma import average
 from thermo import ChemicalConstantsPackage, PRMIX, CEOSLiquid, CEOSGas, FlashPureVLS, FlashVL
 from thermo.interaction_parameters import IPDB
 
@@ -116,8 +114,8 @@ class thermoWrapper:
 
             self.T = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).T
             self.P = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).P
-            self.S = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).S_mass
-            self.H = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).H_mass
+            self.S = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).S_mass()
+            self.H = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).H_mass()
             self.D = self.molarVolumeToDensity(self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).V())
             self.Q = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).VF
 
