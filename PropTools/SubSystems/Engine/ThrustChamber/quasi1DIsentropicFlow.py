@@ -1,7 +1,7 @@
 from math import pi
 
 # Class to perform quasi 1D nozzle flow calculations
-class Nozzle:
+class Quasi1DIsentropicFlow:
 
     def __init__(self, gamma):
         self.gamma = gamma
@@ -13,8 +13,6 @@ class Nozzle:
 
     def A_At(self, M):
 
-        fracUpper = 1 + (self.commonGammaFraction) * (M ** 2)
-        fracLower = 1 + (self.commonGammaFraction)
         exponent = (self.gamma + 1) / (2 * (self.gamma - 1))
 
         out = (1 / M) * ( (2 / (self.gamma + 1)) * (1 + self.commonGammaFraction * (M ** 2))) ** exponent
