@@ -92,9 +92,3 @@ class thrustChamber:
 
     def bartzEquation():
         pass
-
-test = thrustChamber("Ethanol", "Oxygen")
-test.setChamberPressure(40)
-test.findMaxSpecificImpulseMixtureRatio()
-test.Cstar = test.CEA.get_Cstar(Pc=test.chamberPressure, MR=test.idealMixtureRatio)
-print(test.specificImpulse)

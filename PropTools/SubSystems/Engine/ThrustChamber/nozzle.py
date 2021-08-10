@@ -1,9 +1,9 @@
 from numpy.lib import math
 import PropTools.Utils.mathsUtils as mathsUtils
-from math import sqrt, pi, sin, cos, tan, asin, radians, degrees
+from math import sqrt, sin, tan, asin, radians, degrees
 import numpy as np
-import matplotlib.pyplot as plt
 
+# Class to contain common parameters and functions for subclasses
 class Nozzle:
 
     def __init__(self, expansionRatio, throatRadius, entranceRadiusOfCurvatureFactor=1.5, throatEntranceInitialAngle=-135, numberOfPoints=100):
@@ -19,6 +19,7 @@ class Nozzle:
 
         return self.throatRadius * (sqrt(self.expansionRatio) - 1) / tan(radians(divergenceHalfAngle))
 
+    # Generates an evenly spaced array for axial coordinates, and a zero array as a placeholder for radial coordinates
     def getGeometryArrays(self, length, numberOfPoints):
 
         startCoord = self.entranceRadiusOfCurvature * sin(radians(self.throatEntranceInitialAngle))
@@ -29,6 +30,7 @@ class Nozzle:
 
         return axialCoords, radialCoords
 
+    # Gets the throat entrance coordinates
     def getEntranceCoords(self, axialCoords, radialCoords):
 
         i = 0
@@ -41,6 +43,7 @@ class Nozzle:
 
         return axialCoords, radialCoords, i
 
+# Subclass for a conical nozzle
 class conicalNozzle(Nozzle):
 
     def __init__(self, expansionRatio, throatRadius, divergenceHalfAngle=15, entranceRadiusOfCurvatureFactor=1.5, throatEntranceInitialAngle=-135, numberOfPoints=100):
@@ -67,7 +70,7 @@ class conicalNozzle(Nozzle):
 
             i += 1
 
-
+# Subclass for a Rao approximation bell nozzle
 class raoBellNozzle(Nozzle):
 
     def __init__(self, expansionRatio, throatRadius, lengthFraction, entranceRadiusOfCurvatureFactor=1.5, throatEntranceInitialAngle=-135, numberOfPoints=100):
@@ -76,6 +79,10 @@ class raoBellNozzle(Nozzle):
                         throatEntranceInitialAngle=throatEntranceInitialAngle, 
                         numberOfPoints=numberOfPoints
                         )
+
+        # The 4 following arrays contain data extracted from Fig 4-16 from
+        # Huzel, D. and Huang, D., 1992. Modern engineering for design of liquid propellant rocket engines. 
+        # Washington, DC: American Institute of Aeronautics and Astronautics, p.77.
 
         lengthFractions = [0.6, 0.7, 0.8, 0.9, 1]
 
@@ -108,6 +115,7 @@ class raoBellNozzle(Nozzle):
         self.axialCoords, self.radialCoords = self.getGeometryArrays(self.length, self.numberOfPoints)
         self.getNozzleCoords()
     
+    # Uses linear interpolation to estimate the intial and exit wall angles from the data above
     def getWallAngles(self, lengthFractions, expansionRatios, wallAngles):
 
         i = 0
@@ -133,12 +141,14 @@ class raoBellNozzle(Nozzle):
         else:
             return wallAngle1 + tExpansionRatio * abs(wallAngle2 - wallAngle1)
 
+    # Gets the radial coordinates for each of the evenly spaced axial coordinates
     def getNozzleCoords(self):
 
         i = self.getEntranceCoords(self.axialCoords, self.radialCoords)[-1]
 
         angle = 0
 
+        # Finds the coordinates for the initial constant radius throat exit section
         while angle < self.initialWallAngle:
 
             initialRadiusOfCurvature = self.throatRadius * 0.382
@@ -149,10 +159,9 @@ class raoBellNozzle(Nozzle):
 
             i += 1
 
+        # The following uses a quadratic bezier curve to find the coordinates for the parabolic section of the nozzle
         bezierStart = [self.axialCoords[i-1], self.radialCoords[i-1]]
         bezierEnd = [self.length, sqrt(self.expansionRatio) * self.throatRadius]
-
-        print(bezierEnd)
 
         bezierControl = mathsUtils.lineIntersection(bezierStart, tan(radians(self.initialWallAngle)), bezierEnd, tan(radians(self.exitWallAngle)))
 
@@ -170,10 +179,3 @@ class raoBellNozzle(Nozzle):
 
             i += 1
 
-
-test = raoBellNozzle(10, 0.1, 0.8)
-
-fig, ax = plt.subplots()
-ax.plot(test.axialCoords, test.radialCoords)
-plt.axis('square')
-plt.show()

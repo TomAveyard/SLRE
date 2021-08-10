@@ -24,6 +24,7 @@ def lineIntersection(point1, gradient1, point2, gradient2):
 
     return [xIntersection, yIntersection]
 
+# Generates a bezier curve given a list of control point coordinates
 class bezierCurve:
 
     def __init__(self, controlPoints):
@@ -31,6 +32,7 @@ class bezierCurve:
         self.controlPoints = controlPoints
         self.n = len(controlPoints) - 1
 
+    # Binomial lookup table, more efficient than generating each time
     def binomial(self, k):
 
         self.pascalsTriangle = [[1],
@@ -52,6 +54,7 @@ class bezierCurve:
 
         return self.pascalsTriangle[self.n][k]
 
+    # Finds the x/y coordinate for a given t, intended as a helper function for the findPoint function 
     def bezier(self, t, coord):
 
         sum = 0
@@ -69,7 +72,7 @@ class bezierCurve:
 
         return sum
 
-
+    # Returns the x,y coordinates for a given t
     def findPoint(self, t):
 
         if t > 1 or t < 0:

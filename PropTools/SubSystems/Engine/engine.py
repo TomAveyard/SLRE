@@ -38,7 +38,6 @@ class Engine:
 
         self.thrust = thrust
 
-
     def findPropellantMassFlowRates(self):
 
         self.propellantMassFlowRate = self.thrust / (self.specificImpulse * 9.81)
