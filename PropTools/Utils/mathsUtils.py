@@ -1,4 +1,5 @@
 import sys
+from math import pi, sqrt
 
 def linearInterpolation(lowerPoint, upperPoint, x=None, y=None):
 
@@ -73,7 +74,7 @@ class bezierCurve:
         return sum
 
     # Returns the x,y coordinates for a given t
-    def findPoint(self, t):
+    def getPoint(self, t):
 
         if t > 1 or t < 0:
             sys.exit("t has to be 0 <= t <= 1")
@@ -83,6 +84,52 @@ class bezierCurve:
 
         return [x,y]
 
-def findRelativeDistanceBetweenNumbers(num1, num2, numx):
+# Estimates the revolved volume of an abitrary line from its coordinates by adding up the volume of the truncated cone between each coordinate
+def revolvedLineVolumeEstimation(axialCoords, radialCoords):
+
+    if len(axialCoords) != len(radialCoords):
+
+        sys.exit("Length of coordinate arrays must be equal")
+
+    i = 0
+    end = len(axialCoords) - 1
+    sum = 0
+    
+    while i < end:
+
+        r1 = radialCoords[i]
+        r2 = radialCoords[i+1]
+        l = abs(axialCoords[i+1] - axialCoords[i])
+
+        sectionVolume = (1/3) * pi * ((r1 ** 2) + (r1 * r2) + (r2 ** 2)) * l
+
+        sum += sectionVolume
+        i += 1
+
+    return sum
+
+def revolvedLineSurfaceAreaEstimation(axialCoords, radialCoords):
+
+    if len(axialCoords) != len(radialCoords):
+
+        sys.exit("Length of coordinate arrays must be equal")
+
+    i = 0
+    end = len(axialCoords) - 1
+    sum = 0
+
+    while i < end:
+
+        deltax = abs(axialCoords[i+1] - axialCoords[i])
+        deltay = abs(radialCoords[i+1] - radialCoords[i])
+
+        sum += sqrt((deltax ** 2) + (deltay ** 2))
+
+    return sum
+
+
+# Gets the distance of a number between two other numbers as a fraction of 1
+# E.g. if it's 0.25 of the way between num1 and num2, then this will return 0.25
+def getRelativeDistanceBetweenNumbers(num1, num2, numx):
 
     return (numx - num1) / (num2 - num1)

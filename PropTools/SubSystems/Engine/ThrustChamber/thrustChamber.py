@@ -1,6 +1,9 @@
 import sys
 from rocketcea.cea_obj_w_units import CEA_Obj
 from PropTools.SubSystems.Engine.Cycle.Propellant.propellant import Propellant
+from PropTools.SubSystems.Engine.ThrustChamber.combustionChamber import CombustionChamber
+from PropTools.SubSystems.Engine.ThrustChamber.nozzle import Nozzle
+import matplotlib.pyplot as plt
 
 class thrustChamber:
 
@@ -89,6 +92,3 @@ class thrustChamber:
         throatMolWtGamma = self.CEA.get_Throat_MolWt_gamma(Pc=self.chamberPressure, MR=self.idealMixtureRatio, eps=expansionRatio, frozen=ct)
         self.throatMolWt = throatMolWtGamma[0]
         self.gamma = throatMolWtGamma[1]
-
-    def bartzEquation():
-        pass

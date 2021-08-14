@@ -2,67 +2,59 @@ from numpy.lib import math
 import PropTools.Utils.mathsUtils as mathsUtils
 from math import sqrt, sin, tan, asin, radians, degrees
 import numpy as np
+import sys
 
 # Class to contain common parameters and functions for subclasses
 class Nozzle:
 
-    def __init__(self, expansionRatio, throatRadius, entranceRadiusOfCurvatureFactor=1.5, throatEntranceInitialAngle=-135, numberOfPoints=100):
+    def __init__(self, expansionRatio, throatRadius, numberOfPoints=100):
 
         self.expansionRatio = expansionRatio
         self.throatRadius = throatRadius
-        self.entranceRadiusOfCurvatureFactor = entranceRadiusOfCurvatureFactor
-        self.entranceRadiusOfCurvature = self.entranceRadiusOfCurvatureFactor * self.throatRadius
-        self.throatEntranceInitialAngle = throatEntranceInitialAngle
         self.numberOfPoints = numberOfPoints
+
+        self.length = None
+        self.axialCoords = None
+        self.radialCoords = None
 
     def getConicalLength(self, divergenceHalfAngle):
 
         return self.throatRadius * (sqrt(self.expansionRatio) - 1) / tan(radians(divergenceHalfAngle))
 
     # Generates an evenly spaced array for axial coordinates, and a zero array as a placeholder for radial coordinates
-    def getGeometryArrays(self, length, numberOfPoints):
+    def getGeometryArrays(self):
 
-        startCoord = self.entranceRadiusOfCurvature * sin(radians(self.throatEntranceInitialAngle))
-        endCoord = length
+        startCoord = 0
+        endCoord = self.length
 
-        axialCoords = np.linspace(startCoord, endCoord, numberOfPoints)
-        radialCoords = np.zeros(numberOfPoints)
+        axialCoords = np.linspace(startCoord, endCoord, self.numberOfPoints)
+        radialCoords = np.zeros(self.numberOfPoints)
 
         return axialCoords, radialCoords
 
-    # Gets the throat entrance coordinates
-    def getEntranceCoords(self, axialCoords, radialCoords):
+    def getSurfaceArea(self):
 
-        i = 0
+        return mathsUtils.revolvedLineSurfaceAreaEstimation(self.axialCoords, self.radialCoords)
 
-        while axialCoords[i] < 0:
+    def getVolume(self):
 
-            radialCoords[i] = self.throatRadius + self.entranceRadiusOfCurvature - sqrt((self.entranceRadiusOfCurvature ** 2) - (axialCoords[i] ** 2))
-
-            i += 1
-
-        return axialCoords, radialCoords, i
+        return mathsUtils.revolvedLineVolumeEstimation(self.axialCoords, self.radialCoords)
 
 # Subclass for a conical nozzle
 class conicalNozzle(Nozzle):
 
-    def __init__(self, expansionRatio, throatRadius, divergenceHalfAngle=15, entranceRadiusOfCurvatureFactor=1.5, throatEntranceInitialAngle=-135, numberOfPoints=100):
+    def __init__(self, expansionRatio, throatRadius, divergenceHalfAngle=15, numberOfPoints=100):
 
-        super().__init__(expansionRatio, 
-                        throatRadius, 
-                        entranceRadiusOfCurvatureFactor=entranceRadiusOfCurvatureFactor, 
-                        throatEntranceInitialAngle=throatEntranceInitialAngle, 
-                        numberOfPoints=numberOfPoints
-                        )
+        super().__init__(expansionRatio, throatRadius, numberOfPoints=numberOfPoints)
 
         self.divergenceHalfAngle = divergenceHalfAngle
         self.length = self.getConicalLength(self.divergenceHalfAngle)
-        self.axialCoords, self.radialCoords = self.getGeometryArrays(self.length, self.numberOfPoints)
+        self.axialCoords, self.radialCoords = self.getGeometryArrays()
         self.getNozzleCoords()
 
     def getNozzleCoords(self):
 
-        i = self.getEntranceCoords(self.axialCoords, self.radialCoords)[-1]
+        i = 0
         
         while i < self.numberOfPoints:
 
@@ -73,12 +65,20 @@ class conicalNozzle(Nozzle):
 # Subclass for a Rao approximation bell nozzle
 class raoBellNozzle(Nozzle):
 
-    def __init__(self, expansionRatio, throatRadius, lengthFraction, entranceRadiusOfCurvatureFactor=1.5, throatEntranceInitialAngle=-135, numberOfPoints=100):
-        super().__init__(expansionRatio, throatRadius, 
-                        entranceRadiusOfCurvatureFactor=entranceRadiusOfCurvatureFactor, 
-                        throatEntranceInitialAngle=throatEntranceInitialAngle, 
-                        numberOfPoints=numberOfPoints
-                        )
+    def __init__(self, expansionRatio, throatRadius, lengthFraction, numberOfPoints=100):
+        super().__init__(expansionRatio, throatRadius, numberOfPoints=numberOfPoints)
+
+        self.lengthFraction = lengthFraction
+        self.length = self.getConicalLength(15) * self.lengthFraction
+
+        self.exitWallAngle = self.getWallAngles()
+        self.initialWallAngle = self.getWallAngles()
+
+        self.axialCoords, self.radialCoords = self.getGeometryArrays()
+        self.getNozzleCoords()
+    
+    # Uses linear interpolation to estimate the intial and exit wall angles from the data above
+    def getWallAngles(self, type):
 
         # The 4 following arrays contain data extracted from Fig 4-16 from
         # Huzel, D. and Huang, D., 1992. Modern engineering for design of liquid propellant rocket engines. 
@@ -88,45 +88,39 @@ class raoBellNozzle(Nozzle):
 
         expansionRatios = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
-        exitWallAngles = [
-            [19.3, 16.8, 15.7, 14.3, 13.8, 13.2, 13.0, 12.8, 12.8, 12.5],
-            [16.0, 13.8, 12.5, 11.7, 11.0, 10.5, 10.2, 10.2, 10.1, 10.0],
-            [13.0, 10.7,  9.7,  8.8,  8.6,  8.5,  8.3,  8.2,  7.8,  7.7],
-            [10.8,  8.2,  7.5,  7.2,  7.0,  6.8,  6.8,  6.7,  6.3,  6.2],
-            [ 8.0,  6.3,  5.7,  5.3,  5.3,  5.2,  5.0,  5.0,  4.8,  4.6]
-        ]
+        if type.lower() == "initial":
+        
+            wallAngles = [
+                [28.7, 32.5, 34.3, 35.3, 36.2, 36.8, 37.3, 37.8, 38.2, 38.3],
+                [25.7, 28.2, 33.3, 31.8, 32.8, 33.5, 34.0, 34.5, 34.7, 35.0],
+                [23.0, 25.5, 27.7, 29.0, 30.0, 30.8, 31.3, 31.7, 32.0, 32.3],
+                [21.5, 23.7, 26.0, 27.3, 28.7, 29.2, 29.7, 30.0, 30.3, 30.7],
+                [20.0, 22.3, 24.5, 25.7, 26.5, 27.5, 28.3, 28.7, 29.2, 29.5]
+            ]
 
-        initialWallAngles = [
-            [28.7, 32.5, 34.3, 35.3, 36.2, 36.8, 37.3, 37.8, 38.2, 38.3],
-            [25.7, 28.2, 33.3, 31.8, 32.8, 33.5, 34.0, 34.5, 34.7, 35.0],
-            [23.0, 25.5, 27.7, 29.0, 30.0, 30.8, 31.3, 31.7, 32.0, 32.3],
-            [21.5, 23.7, 26.0, 27.3, 28.7, 29.2, 29.7, 30.0, 30.3, 30.7],
-            [20.0, 22.3, 24.5, 25.7, 26.5, 27.5, 28.3, 28.7, 29.2, 29.5]
-        ]
+        elif type.lower() == "exit":
 
-        self.lengthFraction = lengthFraction
-        self.length = self.getConicalLength(15) * self.lengthFraction
+            wallAngles = [
+                [19.3, 16.8, 15.7, 14.3, 13.8, 13.2, 13.0, 12.8, 12.8, 12.5],
+                [16.0, 13.8, 12.5, 11.7, 11.0, 10.5, 10.2, 10.2, 10.1, 10.0],
+                [13.0, 10.7,  9.7,  8.8,  8.6,  8.5,  8.3,  8.2,  7.8,  7.7],
+                [10.8,  8.2,  7.5,  7.2,  7.0,  6.8,  6.8,  6.7,  6.3,  6.2],
+                [ 8.0,  6.3,  5.7,  5.3,  5.3,  5.2,  5.0,  5.0,  4.8,  4.6]
+            ]
+        
+        else:
 
-        self.exitWallAngle = self.getWallAngles(lengthFractions, expansionRatios, exitWallAngles)
-        self.initialWallAngle = self.getWallAngles(lengthFractions, expansionRatios, initialWallAngles)
-
-        self.throatEntranceInitialAngle = throatEntranceInitialAngle
-
-        self.axialCoords, self.radialCoords = self.getGeometryArrays(self.length, self.numberOfPoints)
-        self.getNozzleCoords()
-    
-    # Uses linear interpolation to estimate the intial and exit wall angles from the data above
-    def getWallAngles(self, lengthFractions, expansionRatios, wallAngles):
+            sys.exit("Please specify 'intial' or 'lower' for wall angle type")
 
         i = 0
         while lengthFractions[i] <= self.lengthFraction:
             i += 1
-        tLengthFraction = mathsUtils.findRelativeDistanceBetweenNumbers(lengthFractions[i-1], lengthFractions[i], self.lengthFraction)
+        tLengthFraction = mathsUtils.getRelativeDistanceBetweenNumbers(lengthFractions[i-1], lengthFractions[i], self.lengthFraction)
 
         j = 0
         while expansionRatios[j] <= self.expansionRatio:
             j += 1
-        tExpansionRatio = mathsUtils.findRelativeDistanceBetweenNumbers(expansionRatios[i-1], expansionRatios[i], self.expansionRatio)
+        tExpansionRatio = mathsUtils.getRelativeDistanceBetweenNumbers(expansionRatios[i-1], expansionRatios[i], self.expansionRatio)
 
         if wallAngles[i][j] > wallAngles[i-1][j]:
             tLengthFraction = -tLengthFraction
@@ -144,7 +138,7 @@ class raoBellNozzle(Nozzle):
     # Gets the radial coordinates for each of the evenly spaced axial coordinates
     def getNozzleCoords(self):
 
-        i = self.getEntranceCoords(self.axialCoords, self.radialCoords)[-1]
+        i=0
 
         angle = 0
 
@@ -173,9 +167,8 @@ class raoBellNozzle(Nozzle):
 
             t = point / numberOfBezierPoints
 
-            coords = bezier.findPoint(t)
+            coords = bezier.getPoint(t)
             self.axialCoords[i] = coords[0]
             self.radialCoords[i] = coords[1]
 
             i += 1
-
