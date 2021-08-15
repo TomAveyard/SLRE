@@ -1,4 +1,14 @@
 {
+    "hydrogen": {
+        "symbol": "H2",
+        "ceaName": "H2",
+        "type": "fuel",
+        "mixture": false,
+        "defaultLibrary": "CoolProp",
+        "components": {
+            "Hydrogen": 1
+        }
+    },
     "dodecane": {
         "symbol": "C12H26",
         "ceaName": "Kerosene",
