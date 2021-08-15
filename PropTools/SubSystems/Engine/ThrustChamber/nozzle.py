@@ -41,7 +41,7 @@ class Nozzle:
         return mathsUtils.revolvedLineVolumeEstimation(self.axialCoords, self.radialCoords)
 
 # Subclass for a conical nozzle
-class conicalNozzle(Nozzle):
+class ConicalNozzle(Nozzle):
 
     def __init__(self, expansionRatio, throatRadius, divergenceHalfAngle=15, numberOfPoints=100):
 
@@ -63,7 +63,7 @@ class conicalNozzle(Nozzle):
             i += 1
 
 # Subclass for a Rao approximation bell nozzle
-class raoBellNozzle(Nozzle):
+class RaoBellNozzle(Nozzle):
 
     def __init__(self, expansionRatio, throatRadius, lengthFraction, numberOfPoints=100):
         super().__init__(expansionRatio, throatRadius, numberOfPoints=numberOfPoints)

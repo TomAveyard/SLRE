@@ -5,7 +5,7 @@ from PropTools.SubSystems.Engine.ThrustChamber.combustionChamber import Combusti
 from PropTools.SubSystems.Engine.ThrustChamber.nozzle import Nozzle
 import matplotlib.pyplot as plt
 
-class thrustChamber:
+class ThrustChamber:
 
     def __init__(self, 
                 fuelName, 
