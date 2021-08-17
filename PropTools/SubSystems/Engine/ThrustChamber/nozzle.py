@@ -71,8 +71,8 @@ class RaoBellNozzle(Nozzle):
         self.lengthFraction = lengthFraction
         self.length = self.getConicalLength(15) * self.lengthFraction
 
-        self.exitWallAngle = self.getWallAngles()
-        self.initialWallAngle = self.getWallAngles()
+        self.exitWallAngle = self.getWallAngles('exit')
+        self.initialWallAngle = self.getWallAngles('initial')
 
         self.axialCoords, self.radialCoords = self.getGeometryArrays()
         self.getNozzleCoords()

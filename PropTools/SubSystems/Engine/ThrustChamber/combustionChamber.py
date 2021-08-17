@@ -39,7 +39,7 @@ class CombustionChamber:
 
         self.getChamberCoords()
 
-        self.chamberSurfaceArea()
+        self.surfaceArea = self.getChamberSurfaceArea()
 
 
     def getChamberVolume(self):
@@ -78,6 +78,8 @@ class CombustionChamber:
 
         bezierControl = mathsUtils.lineIntersection(bezierStart, bezierStartGradient, bezierEnd, bezierEndGradient)
 
+        self.bezierPoints = [bezierStart, bezierControl, bezierEnd]
+
         bezier = mathsUtils.bezierCurve([bezierStart, bezierControl, bezierEnd])
 
         numberOfBezierPoints = self.numberOfPoints - 1 - i
@@ -105,6 +107,9 @@ class CombustionChamber:
 
         self.axialCoords[-1] = self.axialCoords[-2] - cylindricalLength
         self.radialCoords[-1] = self.chamberRadius
+
+        self.axialCoords = np.flip(self.axialCoords, 0)
+        self.radialCoords = np.flip(self.radialCoords, 0)
 
     def getChamberSurfaceArea(self):
 

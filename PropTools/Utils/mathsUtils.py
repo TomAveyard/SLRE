@@ -1,6 +1,14 @@
 import sys
 from math import pi, sqrt
 
+def areaToRadius(area):
+
+    return sqrt(area / pi)
+
+def radiusToArea(radius):
+
+    return pi * (radius ** 2)
+
 def linearInterpolation(lowerPoint, upperPoint, x=None, y=None):
 
     if x == None and y == None:
@@ -124,6 +132,7 @@ def revolvedLineSurfaceAreaEstimation(axialCoords, radialCoords):
         deltay = abs(radialCoords[i+1] - radialCoords[i])
 
         sum += sqrt((deltax ** 2) + (deltay ** 2))
+        i += 1
 
     return sum
 
