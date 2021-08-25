@@ -1,6 +1,6 @@
 import sys
 import CoolProp.CoolProp as CP
-import PropTools.SubSystems.Engine.Cycle.Propellant.thermoWrapper as tw
+import PropTools.SubSystems.Engine.Propellant.thermoWrapper as tw
 import json
 from PropTools.Utils.fileHandling import openFromRelativePath
 
@@ -66,7 +66,7 @@ class Propellant:
     # Loads settings for propellant from propellantData.json file where these are stored
     def setSymbols(self):
         
-        f = openFromRelativePath("PropTools/SubSystems/Engine/Cycle/Propellant/propellantData.json")
+        f = openFromRelativePath("PropTools/SubSystems/Engine/Propellant/propellantData.json")
         data = json.load(f)
 
         data = data[self.name.lower()]
@@ -105,13 +105,14 @@ class Propellant:
             # Loop over the properties that need to be solved
             for property in propertiesToSolve:
                 
-                if self.library == "CoolProp":
+                if self.library.lower() == "coolprop":
                     
                     propertiesDict[property] = CP.PropsSI(property, property1, property1Value, property2, property2Value, self.name)
 
-                elif self.library == "Thermo":
+                elif self.library.lower() == "thermo":
                     
                     self.chemical.calculate(T=propertiesDict["T"], P=propertiesDict["P"], D=propertiesDict["D"], H=propertiesDict["H"], S=propertiesDict["S"], Q=propertiesDict["Q"])
+
                     propertiesDict["T"] = self.chemical.T
                     propertiesDict["P"] = self.chemical.P
                     propertiesDict["D"] = self.chemical.D
@@ -126,3 +127,20 @@ class Propellant:
             self.H = propertiesDict["H"]
             self.S = propertiesDict["S"]
             self.Q = propertiesDict["Q"]
+
+            # Set other useful fluid properties
+            if self.library.lower() == "coolprop":
+
+                self.cp = CP.PropsSI("C", property1, property1Value, property2, property2Value, self.name)
+                self.viscosity = CP.PropsSI("VISCOSITY", property1, property1Value, property2, property2Value, self.name)
+                self.cv = CP.PropsSI("CVMASS", property1, property1Value, property2, property2Value, self.name)
+                self.gamma = self.cp/self.cv
+                self.thermalConductivity = CP.PropsSI("L", property1, property1Value, property2, property2Value, self.name)
+
+            elif self.library.lower() == "thermo":
+
+                self.viscosity = self.chemical.mu
+                self.cp = self.chemical.Cp
+                self.cv = self.chemical.Cp
+                self.gamma = self.chemical.gamma
+                self.thermalConductivity = self.chemical.kappa

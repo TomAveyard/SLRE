@@ -1,15 +1,14 @@
 from math import sqrt
 import sys
 from matplotlib import pyplot as plt
-
+from rocketcea.cea_obj_w_units import CEA_Obj
 import numpy as np
+
 from PropTools.Utils.constants import G, R
 from PropTools.Utils.mathsUtils import areaToRadius, radiusToArea
-from rocketcea.cea_obj_w_units import CEA_Obj
-from PropTools.SubSystems.Engine.Cycle.Propellant.propellant import Propellant
+from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.ThrustChamber.combustionChamber import CombustionChamber
 from PropTools.SubSystems.Engine.ThrustChamber.nozzle import ConicalNozzle, RaoBellNozzle
-
 
 class ThrustChamber:
 
@@ -123,18 +122,44 @@ class ThrustChamber:
         self.specificImpulseVacuum = self.CEA.get_Isp(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc)
         self.cStar = self.CEA.get_Cstar(Pc=self.injectionPressure, MR=self.mixtureRatio)
         self.thrustCoefficient = self.CEA.get_PambCf(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, Pamb=self.ambientPressure)[0]
-        self.chamberTemp = self.CEA.get_Tcomb(Pc=self.injectionPressure, MR=self.mixtureRatio)
         self.speciesMassFractions = self.CEA.get_SpeciesMassFractions(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc, min_fraction=0.005)
-        throatMolWtGamma = self.CEA.get_Throat_MolWt_gamma(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=tc)
+        
+        temperatures = self.CEA.get_Temperatures(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc)
+        self.chamberTemp = temperatures[0]
+        self.throatTemp = temperatures[1]
+        self.exitTemp = temperatures[2]
+    
+
+        throatMolWtGamma = self.CEA.get_Throat_MolWt_gamma(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c)
         self.throatMolWt = throatMolWtGamma[0]
         self.throatGamma = throatMolWtGamma[1]
         exitMolWtGamma = self.CEA.get_exit_MolWt_gamma(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio)
         self.exitMolWt = exitMolWtGamma[0]
         self.exitGamma = exitMolWtGamma[1]
+        chamberMolWtGamma = self.CEA.get_Chamber_MolWt_gamma(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio)
+        self.chamberMolWt = chamberMolWtGamma[0]
+        self.chamberGamma = chamberMolWtGamma[1]
+        
+        chamberTransport = self.CEA.get_Chamber_Transport(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c)
+        self.chamberHeatCapacity = chamberTransport[0] 
+        self.chamberViscosity = chamberTransport[1] * 10
+        self.chamberThermalConductivity = chamberTransport[2] * 100
+        self.chamberPrandtlNumber = chamberTransport[3]
+        exitTransport = self.CEA.get_Exit_Transport(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c)
+        self.exitHeatCapacity = exitTransport[0] 
+        self.exitViscosity = exitTransport[1] * 10
+        self.exitThermalConductivity = exitTransport[2] * 100
+        self.exitPrandtlNumber = exitTransport[3]
+
         self.densities = self.CEA.get_Densities(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc)
         self.temperatures = self.CEA.get_Temperatures(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc)
         self.exitMachNumber = self.CEA.get_MachNumber(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc)
-        
+    
+    def getExitTransportPropertiesAtExpansionRatio(self, expansionRatio):
+
+        c, tc = self.convertConditionToCEAFlag(self.condition, self.throatCondition)
+
+        return self.CEA.get_Exit_Transport(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=expansionRatio, frozen=c)
 
     # If the mixture ratio override is not set, then it is assumed maximum specific impulse is wanted
     # This uses CEA to calculate the Isp at intervals specified by searchResolution, starting from a mixture ratio specified by startSearch 
@@ -226,6 +251,7 @@ class ThrustChamber:
 
     def getThrustChamberCoords(self):
 
+        self.throatAverageRadiusOfCurvature = (self.nozzle.throatRadiusOfCurvature + self.combustionChamber.entranceRadiusOfCurvature) / 2
         self.axialCoords = np.concatenate((self.combustionChamber.axialCoords, self.nozzle.axialCoords))
         self.radialCoords = np.concatenate((self.combustionChamber.radialCoords, self.nozzle.radialCoords))
 

@@ -1,6 +1,6 @@
 from numpy.lib import math
-import PropTools.Utils.mathsUtils as mathsUtils
-from math import sqrt, sin, tan, asin, radians, degrees
+from PropTools.Utils.mathsUtils import revolvedLineSurfaceAreaEstimation, revolvedLineVolumeEstimation, getRelativeDistanceBetweenNumbers, lineIntersection, bezierCurve
+from math import sqrt, tan, asin, radians, degrees
 import numpy as np
 import sys
 
@@ -34,16 +34,16 @@ class Nozzle:
 
     def getSurfaceArea(self):
 
-        return mathsUtils.revolvedLineSurfaceAreaEstimation(self.axialCoords, self.radialCoords)
+        return revolvedLineSurfaceAreaEstimation(self.axialCoords, self.radialCoords)
 
     def getVolume(self):
 
-        return mathsUtils.revolvedLineVolumeEstimation(self.axialCoords, self.radialCoords)
+        return revolvedLineVolumeEstimation(self.axialCoords, self.radialCoords)
 
 # Subclass for a conical nozzle
 class ConicalNozzle(Nozzle):
 
-    def __init__(self, expansionRatio, throatRadius, divergenceHalfAngle=15, numberOfPoints=100):
+    def __init__(self, expansionRatio, throatRadius, divergenceHalfAngle=15, numberOfPoints=100, throatRadiusOfCurvatureFactor=1):
 
         super().__init__(expansionRatio, throatRadius, numberOfPoints=numberOfPoints)
 
@@ -51,6 +51,8 @@ class ConicalNozzle(Nozzle):
         self.length = self.getConicalLength(self.divergenceHalfAngle)
         self.axialCoords, self.radialCoords = self.getGeometryArrays()
         self.getNozzleCoords()
+        self.throatRadiusOfCurvatureFactor = throatRadiusOfCurvatureFactor
+        self.throatRadiusOfCurvature = self.throatRadius * self.throatRadiusOfCurvatureFactor
 
     def getNozzleCoords(self):
 
@@ -70,6 +72,9 @@ class RaoBellNozzle(Nozzle):
 
         self.lengthFraction = lengthFraction
         self.length = self.getConicalLength(15) * self.lengthFraction
+
+        self.throatRadiusOfCurvatureFactor = 0.382
+        self.throatRadiusOfCurvature = self.throatRadius * self.throatRadiusOfCurvatureFactor
 
         self.exitWallAngle = self.getWallAngles('exit')
         self.initialWallAngle = self.getWallAngles('initial')
@@ -115,12 +120,12 @@ class RaoBellNozzle(Nozzle):
         i = 0
         while lengthFractions[i] <= self.lengthFraction:
             i += 1
-        tLengthFraction = mathsUtils.getRelativeDistanceBetweenNumbers(lengthFractions[i-1], lengthFractions[i], self.lengthFraction)
+        tLengthFraction = getRelativeDistanceBetweenNumbers(lengthFractions[i-1], lengthFractions[i], self.lengthFraction)
 
         j = 0
         while expansionRatios[j] <= self.expansionRatio:
             j += 1
-        tExpansionRatio = mathsUtils.getRelativeDistanceBetweenNumbers(expansionRatios[i-1], expansionRatios[i], self.expansionRatio)
+        tExpansionRatio = getRelativeDistanceBetweenNumbers(expansionRatios[i-1], expansionRatios[i], self.expansionRatio)
 
         if wallAngles[i][j] > wallAngles[i-1][j]:
             tLengthFraction = -tLengthFraction
@@ -145,7 +150,7 @@ class RaoBellNozzle(Nozzle):
         # Finds the coordinates for the initial constant radius throat exit section
         while angle < self.initialWallAngle:
 
-            initialRadiusOfCurvature = self.throatRadius * 0.382
+            initialRadiusOfCurvature = self.throatRadiusOfCurvature
 
             self.radialCoords[i] = self.throatRadius + initialRadiusOfCurvature - sqrt((initialRadiusOfCurvature ** 2) - (self.axialCoords[i] ** 2))
 
@@ -157,9 +162,9 @@ class RaoBellNozzle(Nozzle):
         bezierStart = [self.axialCoords[i-1], self.radialCoords[i-1]]
         bezierEnd = [self.length, sqrt(self.expansionRatio) * self.throatRadius]
 
-        bezierControl = mathsUtils.lineIntersection(bezierStart, tan(radians(self.initialWallAngle)), bezierEnd, tan(radians(self.exitWallAngle)))
+        bezierControl = lineIntersection(bezierStart, tan(radians(self.initialWallAngle)), bezierEnd, tan(radians(self.exitWallAngle)))
 
-        bezier = mathsUtils.bezierCurve([bezierStart, bezierControl, bezierEnd])
+        bezier = bezierCurve([bezierStart, bezierControl, bezierEnd])
 
         numberOfBezierPoints = self.numberOfPoints - i
 

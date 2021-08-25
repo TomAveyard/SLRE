@@ -1,5 +1,6 @@
 import sys
 from thermo import ChemicalConstantsPackage, PRMIX, CEOSLiquid, CEOSGas, FlashPureVLS, FlashVL
+import thermo
 from thermo.interaction_parameters import IPDB
 
 class thermoWrapper:
@@ -118,6 +119,11 @@ class thermoWrapper:
             self.H = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).H_mass()
             self.D = self.molarVolumeToDensity(self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).V())
             self.Q = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).VF
+            self.Cp = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).Cp_mass()
+            self.Cv = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).Cv_mass()
+            self.gamma = self.Cp/self.Cv
+            self.mu = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).mu()
+            self.kappa = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).k()
 
         elif self.type == "Mixture":
             
@@ -127,4 +133,9 @@ class thermoWrapper:
             self.H = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).H_mass()
             self.D = self.molarVolumeToDensity(self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).V())
             self.Q = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).VF
+            self.Cp = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).Cp_mass()
+            self.Cv = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).Cv_mass()
+            self.gamma = self.Cp/self.Cv
+            self.mu = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).mu()
+            self.kappa = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).k()
 

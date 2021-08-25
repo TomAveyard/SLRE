@@ -136,6 +136,12 @@ def revolvedLineSurfaceAreaEstimation(axialCoords, radialCoords):
 
     return sum
 
+def distanceBetweenTwoPoints(point1, point2):
+
+    deltax = abs(point2[0] - point1[0])
+    deltay = abs(point2[1] - point1[1])
+
+    return sqrt((deltax ** 2) + (deltay ** 2))
 
 # Gets the distance of a number between two other numbers as a fraction of 1
 # E.g. if it's 0.25 of the way between num1 and num2, then this will return 0.25
