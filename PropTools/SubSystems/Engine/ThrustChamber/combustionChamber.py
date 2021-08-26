@@ -11,7 +11,8 @@ class CombustionChamber:
         contractionLength, 
         entranceRadiusOfCurvatureFactor=1.5, 
         throatEntranceStartAngle=(-135), 
-        numberOfPoints=100):
+        numberOfPointsConverging=100,
+        numberOfPointsStraight=100):
 
         self.lStar = lStar
         self.throatRadius = throatRadius
@@ -30,12 +31,14 @@ class CombustionChamber:
 
         self.throatEntranceStartAngle = throatEntranceStartAngle
 
-        self.numberOfPoints = numberOfPoints
+        self.numberOfPointsConverging = numberOfPointsConverging
+        self.numberOfPointsStraight = numberOfPointsStraight
 
-        self.axialCoords = np.linspace(0, -contractionLength, numberOfPoints - 1)
-        self.axialCoords = np.append(self.axialCoords, 0)
+        axialCoordsConverging = np.linspace(0, -contractionLength, numberOfPointsConverging)
+        axialCoordsStraight = np.zeros(self.numberOfPointsStraight)
+        self.axialCoords = np.append(axialCoordsConverging, axialCoordsStraight)
 
-        self.radialCoords = np.zeros(numberOfPoints)
+        self.radialCoords = np.zeros(len(self.axialCoords))
 
         self.getChamberCoords()
 
@@ -82,7 +85,7 @@ class CombustionChamber:
 
         bezier = mathsUtils.bezierCurve([bezierStart, bezierControl, bezierEnd])
 
-        numberOfBezierPoints = self.numberOfPoints - 1 - i
+        numberOfBezierPoints = self.numberOfPointsConverging - i
 
         for point in range(numberOfBezierPoints):
 
@@ -96,8 +99,8 @@ class CombustionChamber:
 
         # Finds the volume of the converging section
 
-        convergingAxialCoords = self.axialCoords[:-1]
-        convergingRadialCoords = self.radialCoords[:-1]
+        convergingAxialCoords = self.axialCoords[:self.numberOfPointsConverging]
+        convergingRadialCoords = self.radialCoords[:self.numberOfPointsConverging]
 
         convergingVolume = mathsUtils.revolvedLineVolumeEstimation(convergingAxialCoords, convergingRadialCoords)
 
@@ -105,8 +108,12 @@ class CombustionChamber:
 
         cylindricalLength = remainingVolume / self.chamberArea
 
-        self.axialCoords[-1] = self.axialCoords[-2] - cylindricalLength
-        self.radialCoords[-1] = self.chamberRadius
+        axialCoordsStraight = np.linspace(convergingAxialCoords[-1], -cylindricalLength, self.numberOfPointsStraight)
+
+        for i in range(self.numberOfPointsStraight):
+
+            self.axialCoords[self.numberOfPointsConverging + i] = axialCoordsStraight[i]
+            self.radialCoords[self.numberOfPointsConverging + i] = self.chamberRadius
 
         self.axialCoords = np.flip(self.axialCoords, 0)
         self.radialCoords = np.flip(self.radialCoords, 0)

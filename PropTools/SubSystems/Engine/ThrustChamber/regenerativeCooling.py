@@ -1,13 +1,14 @@
 from matplotlib.pyplot import cool
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
-import sys
 import numpy as np
-from math import exp, sqrt, pi
+from math import sqrt, pi
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.constants import G
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
 import matplotlib.pyplot as plt
 
+# Class to store information about the cooling channel design
+# Channels are modelled as a sector of a annulus
 class CoolingChannels:
 
     def __init__(self,
@@ -68,7 +69,9 @@ class ChannelDimensions:
         self.individualChannelArea = 0.5 * self.height * (self.bottomWidth + self.topWidth)
         self.totalChannelArea = self.individualChannelArea * self.coolingChannels.numberOfChannels
    
-
+# Class to store information about the regenerative cooling system
+# Performs an iterative calculation for every point defined by the input thrust chamber object
+# with the channel dimensions defined by the cooling channel object
 class RegenerativeCooling:
 
     def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, coolantInletState: Propellant):
@@ -77,12 +80,11 @@ class RegenerativeCooling:
         self.coolingChannels = coolingChannels
         self.coolantInletState = coolantInletState
 
-        self.iterationLoop()
-
-    def iterationLoop(self, convergenceCriteria=0.01):
+    def calculate(self, convergenceCriteria=0.01):
 
         i = len(self.thrustChamber.axialCoords)
 
+        # Initialise arrays to store relevant info about the heat transfer
         self.heatFluxes = np.zeros(i)
         self.adiabaticWallTemps = np.zeros(i)
         self.gasSideWallTemps = np.zeros(i)
@@ -90,16 +92,15 @@ class RegenerativeCooling:
         self.coolantBulkTemps = np.zeros(i)
         self.coolantPressures = np.zeros(i)
 
+        # -1 from the length to get the last index of the array
         i -= 1
 
         # Get values for first station at very end of nozzle
-
         self.coolantBulkTemps[i] = self.coolantInletState.T
         self.coolantPressures[i] = self.coolantInletState.P
-        self.adiabaticWallTemps[i] = self.getLocalAdiabaticWallTemp(self.thrustChamber.exitArea)
+        self.adiabaticWallTemps[i] = self.getLocalAdiabaticWallTempNozzle(self.thrustChamber.exitArea)
 
         # Propellant objects for calculating the changes in the coolant state as it passes through the channels
-
         coolantState = Propellant(self.coolantInletState.name)
         coolantState.defineState("T", self.coolantInletState.T, "P", self.coolantInletState.P)
         surfaceCoolantState = Propellant(self.coolantInletState.name)
@@ -107,7 +108,6 @@ class RegenerativeCooling:
         i -= 1
 
         # Initialise variables for loop
-
         area = 0
         adiabaticWallTemp = 0
         localMachNumber = 0
@@ -122,19 +122,22 @@ class RegenerativeCooling:
         coolantNusseltNumber = 0
         coolantSideHeatTransferCoefficient = 0
         
-        iterations = 0
+        totalIterations = 0
 
         while i > 0:
+
+            iterations = 0
 
             # Get the area, adiabatic wall temperature, and gas mach number for the station before the loop,
             # as these are constant for a station
             area = radiusToArea(self.thrustChamber.radialCoords[i])
-            adiabaticWallTemp = self.getLocalAdiabaticWallTemp(area)
 
             if i > 0:
                 localMachNumber = self.getLocalMachNumberNozzle(area)
+                adiabaticWallTemp = self.getLocalAdiabaticWallTempNozzle(area)
             elif i < 0:
                 localMachNumber = self.getLocalMachNumberChamber(area)
+                adiabaticWallTemp = self.getLocalAdiabaticWallTempChamber(area)
 
             # Guess an initial value for the gas side wall temp
             gasSideWallTemp = self.gasSideWallTemps[i-1]
@@ -183,7 +186,9 @@ class RegenerativeCooling:
 
                 iterations += 1
 
-            print(i)
+            totalIterations += iterations
+
+            print("Solved station " + str(i) + " in " + str(iterations) + " iterations")
                 
             self.heatFluxes[i] = gasSideHeatFlux
             self.adiabaticWallTemps[i] = adiabaticWallTemp
@@ -200,6 +205,9 @@ class RegenerativeCooling:
             coolantState.defineState("T", newCoolantBulkTemp, "P", newCoolantPressure)
 
             i -= 1
+
+        print("\nHeat transfer calculaton complete")
+        print("Total iterations: " + str(totalIterations))
 
     def bartzEquation(self, localArea, gasSideWallTemp, localMachNumber):
 
@@ -219,14 +227,6 @@ class RegenerativeCooling:
 
         return 1 / (denominatorFirstBracket * denominatorSecondBracket)
 
-    def getConvectiveHeatFlux(self, heatTransferCoeffiecient, Temp1, Temp2):
-
-        return heatTransferCoeffiecient * (Temp1 - Temp2)
-
-    def getCoolantSideWallTemp(self, gasSideWallTemp, gasSideHeatFlux):
-
-        return gasSideWallTemp - ((gasSideHeatFlux * self.coolingChannels.wallThickness) / self.coolingChannels.wallConductivity)
-
     def reynoldsNumber(self, density, velocity, characteristicLength, visocity):
 
         return (density * velocity * characteristicLength) / visocity
@@ -238,10 +238,6 @@ class RegenerativeCooling:
     def massFlowRateToVelocity(self, massFlowRate, density, area):
 
         return massFlowRate / (density * area)
-
-    def getCoolantSideHeatFlux(self, coolantSideHeatTransferCoefficient, coolantSideWallTemp, coolantBulkTemperature):
-
-        return coolantSideHeatTransferCoefficient * (coolantSideWallTemp - coolantBulkTemperature)
 
     def siederTateEquation(self, reynoldsNumber, prandtlNumber, bulkViscosity, surfaceViscosity, C1=0.023):
 
@@ -326,7 +322,7 @@ class RegenerativeCooling:
 
         return CEA.get_exit_MolWt_gamma(Pc=self.thrustChamber.chamberPressure, MR=self.thrustChamber.mixtureRatio, eps=expansionRatioAtArea)[1]
 
-    def getLocalAdiabaticWallTemp(self, area):
+    def getLocalAdiabaticWallTempNozzle(self, area):
 
         mach = self.getLocalMachNumberNozzle(area)
         r = self.getLocalRecoveryFactor(area)
@@ -338,20 +334,39 @@ class RegenerativeCooling:
 
         return gasTemp * (numerator / denominator)
 
+    def getLocalAdiabaticWallTempChamber(self, area):
+
+        mach = self.getLocalMachNumberChamber(area)
+        r = self.thrustChamber.chamberPrandtlNumber ** 0.33
+        gamma = self.thrustChamber.chamberGamma
+        gasTemp = self.getLocalGasTempChamber(area)
+
+        numerator = 1 + (r * ((gamma-1) / 2) * (mach ** 2))
+        denominator = 1 + ((gamma-1) / 2) * (mach ** 2)
+
+        return gasTemp * (numerator / denominator)
+
 testThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 25, fac=True, CR=5, ambientPressure=1)
-testThrustChamber.getChamberGeometry(1.05, 0.05, entranceRadiusOfCurvatureFactor=0.75, throatEntranceStartAngle=-135)
-testThrustChamber.getRaoBellNozzleGeometry(0.6)
+
+testThrustChamber.getChamberGeometry(1.05,
+                                     0.05, 
+                                     entranceRadiusOfCurvatureFactor=0.75, 
+                                     throatEntranceStartAngle=-135, 
+                                     numberOfPointsConverging=50,
+                                     numberOfPointsStraight=10)
+
+testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=50)
 testThrustChamber.getThrustChamberCoords()
 
-coolingChannelMassFlowRate = testThrustChamber.propellantMassFlowRate * (1 / testThrustChamber.mixtureRatio)
-
-testCoolingChannels = CoolingChannels(coolingChannelMassFlowRate, 80, 0.001, 0.001, 0.01, 300)
+testCoolingChannels = CoolingChannels(testThrustChamber.fuelMassFlowRate, 80, 0.001, 0.001, 0.01, 300)
 
 inlet = Propellant(testThrustChamber.fuel.name)
 inlet.defineState("T", 298, "P", 40*10**5)
 
 testRegenCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, inlet)
+testRegenCooling.calculate(convergenceCriteria=0.1)
 
 fig, ax = plt.subplots()
-ax.plot(testThrustChamber.thrustChamber.axialCoords, RegenerativeCooling.heatFluxes)
+ax.plot(testThrustChamber.axialCoords[1:-1], testRegenCooling.heatFluxes[1:-1])
 plt.show()
+

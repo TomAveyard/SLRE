@@ -213,6 +213,8 @@ class ThrustChamber:
     def getMassFlowRate(self):
 
         self.propellantMassFlowRate = self.thrust / (self.specificImpulse * G)
+        self.fuelMassFlowRate = self.propellantMassFlowRate * (1 / self.mixtureRatio)
+        self.oxMassFlowRate = self.propellantMassFlowRate * self.mixtureRatio
 
     def getExitVelocity(self):
 
@@ -231,7 +233,7 @@ class ThrustChamber:
         self.throatRadius = areaToRadius(self.throatArea)
         self.throatDiameter = self.throatRadius * 2
 
-    def getChamberGeometry(self, lStar, contractionLength, entranceRadiusOfCurvatureFactor=1.5, throatEntranceStartAngle=(-135), numberOfPoints=100):
+    def getChamberGeometry(self, lStar, contractionLength, entranceRadiusOfCurvatureFactor=1.5, throatEntranceStartAngle=(-135), numberOfPointsConverging=100, numberOfPointsStraight=100):
 
         self.combustionChamber = CombustionChamber(lStar, 
             self.throatRadius, 
@@ -239,7 +241,9 @@ class ThrustChamber:
             contractionLength, 
             entranceRadiusOfCurvatureFactor=entranceRadiusOfCurvatureFactor, 
             throatEntranceStartAngle=throatEntranceStartAngle, 
-            numberOfPoints=numberOfPoints)
+            numberOfPointsConverging=numberOfPointsConverging,
+            numberOfPointsStraight=numberOfPointsStraight
+            )
 
     def getRaoBellNozzleGeometry(self, lengthFraction, numberOfPoints=300):
 
