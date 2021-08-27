@@ -1,4 +1,3 @@
-from matplotlib.pyplot import cool
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
 from math import sqrt, pi
@@ -80,20 +79,22 @@ class RegenerativeCooling:
         self.coolingChannels = coolingChannels
         self.coolantInletState = coolantInletState
 
+        self.numberOfStations = len(self.thrustChamber.axialCoords)
+
+        self.heatFluxes = np.zeros(self.numberOfStations)
+        self.adiabaticWallTemps = np.zeros(self.numberOfStations)
+        self.gasSideWallTemps = np.zeros(self.numberOfStations)
+        self.coolantSideWallTemps = np.zeros(self.numberOfStations)
+        self.coolantBulkTemps = np.zeros(self.numberOfStations)
+        self.coolantPressures = np.zeros(self.numberOfStations)
+
+        self.coolantOutletState = Propellant(self.coolantInletState.name)
+        self.coolantEnthalpyChange = None
+        self.totalHeatPower = None
+
     def calculate(self, convergenceCriteria=0.01):
 
-        i = len(self.thrustChamber.axialCoords)
-
-        # Initialise arrays to store relevant info about the heat transfer
-        self.heatFluxes = np.zeros(i)
-        self.adiabaticWallTemps = np.zeros(i)
-        self.gasSideWallTemps = np.zeros(i)
-        self.coolantSideWallTemps = np.zeros(i)
-        self.coolantBulkTemps = np.zeros(i)
-        self.coolantPressures = np.zeros(i)
-
-        # -1 from the length to get the last index of the array
-        i -= 1
+        i = self.numberOfStations - 1
 
         # Get values for first station at very end of nozzle
         self.coolantBulkTemps[i] = self.coolantInletState.T
@@ -206,8 +207,15 @@ class RegenerativeCooling:
 
             i -= 1
 
+        self.coolantOutletState.defineState("T", self.coolantBulkTemps[1], "P", self.coolantPressures[1])
+        self.coolantEnthalpyChange = self.coolantOutletState.H - self.coolantInletState.H
+        self.totalHeatPower = self.coolingChannels.massFlowRate * self.coolantEnthalpyChange
+
         print("\nHeat transfer calculaton complete")
         print("Total iterations: " + str(totalIterations))
+        print("---")
+        print("Coolant Enthalpy Change: " + str(self.coolantEnthalpyChange))
+        print("Total Heat Power: " + str(self.totalHeatPower))
 
     def bartzEquation(self, localArea, gasSideWallTemp, localMachNumber):
 
@@ -345,28 +353,4 @@ class RegenerativeCooling:
         denominator = 1 + ((gamma-1) / 2) * (mach ** 2)
 
         return gasTemp * (numerator / denominator)
-
-testThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 25, fac=True, CR=5, ambientPressure=1)
-
-testThrustChamber.getChamberGeometry(1.05,
-                                     0.05, 
-                                     entranceRadiusOfCurvatureFactor=0.75, 
-                                     throatEntranceStartAngle=-135, 
-                                     numberOfPointsConverging=50,
-                                     numberOfPointsStraight=10)
-
-testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=50)
-testThrustChamber.getThrustChamberCoords()
-
-testCoolingChannels = CoolingChannels(testThrustChamber.fuelMassFlowRate, 80, 0.001, 0.001, 0.01, 300)
-
-inlet = Propellant(testThrustChamber.fuel.name)
-inlet.defineState("T", 298, "P", 40*10**5)
-
-testRegenCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, inlet)
-testRegenCooling.calculate(convergenceCriteria=0.1)
-
-fig, ax = plt.subplots()
-ax.plot(testThrustChamber.axialCoords[1:-1], testRegenCooling.heatFluxes[1:-1])
-plt.show()
 

@@ -5,7 +5,7 @@ from rocketcea.cea_obj_w_units import CEA_Obj
 import numpy as np
 
 from PropTools.Utils.constants import G, R
-from PropTools.Utils.mathsUtils import areaToRadius, radiusToArea
+from PropTools.Utils.mathsUtils import areaToRadius, revolvedLineSurfaceAreaEstimation
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.ThrustChamber.combustionChamber import CombustionChamber
 from PropTools.SubSystems.Engine.ThrustChamber.nozzle import ConicalNozzle, RaoBellNozzle
@@ -258,6 +258,12 @@ class ThrustChamber:
         self.throatAverageRadiusOfCurvature = (self.nozzle.throatRadiusOfCurvature + self.combustionChamber.entranceRadiusOfCurvature) / 2
         self.axialCoords = np.concatenate((self.combustionChamber.axialCoords, self.nozzle.axialCoords))
         self.radialCoords = np.concatenate((self.combustionChamber.radialCoords, self.nozzle.radialCoords))
+        
+        self.getSurfaceArea()
+
+    def getSurfaceArea(self):
+
+        self.surfaceArea = revolvedLineSurfaceAreaEstimation(self.axialCoords, self.radialCoords)
 
     def plotGeometry(self, part="thrust chamber", show=True, save=False, plotColor="black"):
 
