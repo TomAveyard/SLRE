@@ -38,7 +38,7 @@ class Flight:
             sys.exit("Invalid: Lengths of x and y lists not equal")
 
         if xValue > x[-1]:
-            #print("Warning: xValue greater than range of given lists, last y value has been returned")
+            print("Warning: xValue greater than range of given lists, last y value has been returned")
             return(y[-1])
         
         if xValue < x[0]:

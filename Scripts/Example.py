@@ -1,44 +1,30 @@
-from PropTools import vehicle
-from PropTools.FlightSimulation.flight import Flight
-from PropTools.SubSystems.Engine.Cycle.cyclediagrams import *
+from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
+from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling
+from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
+from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling, CoolingChannels
 
-expanderExample = vehicle.Vehicle("Expander Example", "Methane", "Oxygen")
+import matplotlib.pyplot as plt
 
-# Define engine parameters
-expanderExample.engine.setMass(25)
-expanderExample.engine.setChamberPressure(40e5)
-expanderExample.engine.setThrust(25e3)
-expanderExample.engine.findIdealMixtureRatio()
-expanderExample.engine.findPropellantMassFlowRates()
+testThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 35, fac=True, CR=5, ambientPressure=1)
 
-# Define airframe parameters
-expanderExample.airframe.setMass(30)
-expanderExample.airframe.setDragCharacteristics(0.11, "Scripts/dragCurve.csv")
-expanderExample.airframe.setTotalTankVolume(0.03)
+testThrustChamber.getChamberGeometry(1.05,
+                                     0.05, 
+                                     entranceRadiusOfCurvatureFactor=0.75, 
+                                     throatEntranceStartAngle=-135, 
+                                     numberOfPointsConverging=50,
+                                     numberOfPointsStraight=10)
 
-# Define engine cycle parameters
-expanderExample.engine.cycle.setFuelTank(100, 3e5)
-expanderExample.engine.cycle.setOxTank(66, 3e5)
-expanderExample.engine.cycle.setInjector(1e5)
-expanderExample.engine.cycle.setFuelPumpEfficiency(0.7)
-expanderExample.engine.cycle.setOxPumpEfficiency(0.7)
-expanderExample.engine.cycle.setTurbineEfficiency(0.7)
-expanderExample.engine.cycle.setRegenCoolingEstimate(147*5, 205900, expanderExample.engine.chamberTemp, 300, 4/1e3, 400, 0.2785, 9e5)
+testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=50)
+testThrustChamber.getThrustChamberCoords()
 
-simulate = "flight"
+testCoolingChannels = CoolingChannels(testThrustChamber.fuelMassFlowRate, 80, 0.001, 0.001, 0.01, 300)
 
-if simulate == "cycle":
-    # Draw cycle
-    expanderExample.engine.cycle.solveCycle()
-    cycleStates = [expanderExample.engine.cycle.fuelTank, expanderExample.engine.cycle.fuelPump, expanderExample.engine.cycle.regenCooling, expanderExample.engine.cycle.turbine]
-    cycleDiagram = TSCycleDiagram("Methane", cycleStates)
-    cycleDiagram.drawCycle()
+inlet = Propellant(testThrustChamber.fuel.name)
+inlet.defineState("T", 298, "P", 35*10**5)
 
-elif simulate == "flight":
-    # Perform flight simulation
-    expanderExample.calculateMasses()
-    expanderExample.calculateDeltaV()
-    
-    flightSim = Flight(expanderExample)
-    flightSim.flightSimulation()
-    flightSim.plotGraph()
+testRegenCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, inlet)
+testRegenCooling.calculate(convergenceCriteria=0.01)
+
+fig, ax = plt.subplots()
+ax.plot(testThrustChamber.axialCoords[1:-1], testRegenCooling.gasSideWallTemps[1:-1])
+plt.show()
