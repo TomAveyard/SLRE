@@ -99,6 +99,10 @@ class RegenerativeCooling:
 
     def calculate(self, convergenceCriteria=0.01):
 
+        print("---")
+        print("Starting Heat Transfer Calculation")
+        print("Number Of Stations: " + str(self.numberOfStations))
+
         i = self.numberOfStations - 1
 
         # Get values for first station at very end of nozzle
@@ -220,17 +224,20 @@ class RegenerativeCooling:
         self.coolantEnthalpyChange = self.coolantOutletState.H - self.coolantInletState.H
         self.totalHeatPower = self.coolingChannels.massFlowRate * self.coolantEnthalpyChange
 
+        print("---")
         print("\nHeat transfer calculaton complete")
         print("Total iterations: " + str(totalIterations))
         print("---")
         print("Coolant Enthalpy Change: " + str(self.coolantEnthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
+        print("Total Pressure Loss: " + str(self.coolantOutletState.P - self.coolantInletState.P) + " Pa")
+        print("---")
 
     def bartzEquation(self, localArea, gasSideWallTemp, localMachNumber):
 
         firstBracket = (0.026 / self.thrustChamber.throatDiameter)
         secondBracket = (((self.thrustChamber.chamberViscosity ** 0.2) * self.thrustChamber.chamberHeatCapacity) / (self.thrustChamber.chamberPrandtlNumber ** 0.6))
-        thirdBracket = ((self.thrustChamber.chamberPressure * G) / self.thrustChamber.cStar) ** 0.8
+        thirdBracket = ((self.thrustChamber.chamberPressureSI * G) / self.thrustChamber.cStar) ** 0.8
         fourthBracket = (self.thrustChamber.throatDiameter / self.thrustChamber.throatAverageRadiusOfCurvature) ** 0.1
         fifthBracket = (self.thrustChamber.throatArea / localArea) ** 0.9
         sigma = self.bartzCorrectionFactor(gasSideWallTemp, localMachNumber)
