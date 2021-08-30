@@ -1,10 +1,9 @@
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import sqrt, pi
+from math import sqrt, pi, log10
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.constants import G
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
-import matplotlib.pyplot as plt
 
 # Class to store information about the cooling channel design
 # Channels are modelled as a sector of a annulus
@@ -235,6 +234,24 @@ class RegenerativeCooling:
 
         return 1 / (denominatorFirstBracket * denominatorSecondBracket)
 
+    def colebrookEquation(self, channelRoughness, hydraulicDiameter, reynoldsNumber, convergenceCriteria=0.01):
+
+        x = -2 * log10(channelRoughness / (3.7 * hydraulicDiameter))
+        xPrev = x + 10
+
+        while abs(abs(x) - abs(xPrev)) > convergenceCriteria:
+
+            xPrev = x
+            x = -2 * log10((channelRoughness / (3.7 * hydraulicDiameter)) + ((2.51 * xPrev) / reynoldsNumber))
+
+        frictionFactor = (1 / x) ** 2
+
+        return frictionFactor
+        
+    def pressureLoss(self, frictionFactor, length, hydraulicDiameter, density, velocity):
+
+        return frictionFactor * (length / hydraulicDiameter) * 0.5 * density * (velocity ** 2)
+    
     def reynoldsNumber(self, density, velocity, characteristicLength, visocity):
 
         return (density * velocity * characteristicLength) / visocity
