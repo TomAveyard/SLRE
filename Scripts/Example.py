@@ -11,20 +11,20 @@ testThrustChamber.getChamberGeometry(1.05,
                                      0.05, 
                                      entranceRadiusOfCurvatureFactor=0.75, 
                                      throatEntranceStartAngle=-135, 
-                                     numberOfPointsConverging=50,
-                                     numberOfPointsStraight=10)
+                                     numberOfPointsConverging=100,
+                                     numberOfPointsStraight=20)
 
-testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=50)
+testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=100)
 testThrustChamber.getThrustChamberCoords()
 
-testCoolingChannels = CoolingChannels(testThrustChamber.fuelMassFlowRate, 80, 0.001, 0.001, 0.01, 300)
+testCoolingChannels = CoolingChannels(testThrustChamber.fuelMassFlowRate, 40, 0.005, 0.005, 0.02, 300, 5*10**(-6))
 
 inlet = Propellant(testThrustChamber.fuel.name)
-inlet.defineState("T", 298, "P", 35*10**5)
+inlet.defineState("T", 298, "P", 50*10**5)
 
 testRegenCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, inlet)
 testRegenCooling.calculate(convergenceCriteria=0.01)
 
 fig, ax = plt.subplots()
-ax.plot(testThrustChamber.axialCoords[1:-1], testRegenCooling.gasSideWallTemps[1:-1])
+ax.plot(testThrustChamber.axialCoords[1:-1], testRegenCooling.heatFluxes[1:-1])
 plt.show()

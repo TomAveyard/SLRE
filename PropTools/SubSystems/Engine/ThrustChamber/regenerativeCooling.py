@@ -1,10 +1,9 @@
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import sqrt, pi
+from math import sqrt, pi, log10
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.constants import G
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
-import matplotlib.pyplot as plt
 
 # Class to store information about the cooling channel design
 # Channels are modelled as a sector of a annulus
@@ -17,7 +16,7 @@ class CoolingChannels:
         midRibThickness,
         channelHeight, 
         wallConductivity, 
-        wallRoughnessHeight=0):
+        wallRoughnessHeight):
 
         self.massFlowRate = massFlowRate
         self.numberOfChannels = numberOfChannels
@@ -48,6 +47,8 @@ class ChannelDimensions:
         self.thrustChamberRadius = None
         self.individualChannelArea = None
         self.totalChannelArea = None
+        self.wettedPerimeter = None
+        self.hydraulicDiameter = None
 
     def getChannelDimensions(self, thrustChamberArea):
         
@@ -67,6 +68,10 @@ class ChannelDimensions:
 
         self.individualChannelArea = 0.5 * self.height * (self.bottomWidth + self.topWidth)
         self.totalChannelArea = self.individualChannelArea * self.coolingChannels.numberOfChannels
+
+        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.height * 2)
+        self.hydraulicDiameter = 4 * self.individualChannelArea / self.wettedPerimeter
+
    
 # Class to store information about the regenerative cooling system
 # Performs an iterative calculation for every point defined by the input thrust chamber object
@@ -93,6 +98,10 @@ class RegenerativeCooling:
         self.totalHeatPower = None
 
     def calculate(self, convergenceCriteria=0.01):
+
+        print("---")
+        print("Starting Heat Transfer Calculation")
+        print("Number Of Stations: " + str(self.numberOfStations))
 
         i = self.numberOfStations - 1
 
@@ -152,7 +161,7 @@ class RegenerativeCooling:
                 # Calculate flow properties for the channel at the station
                 self.coolingChannels.channelInstance.getChannelDimensions(area)
                 coolantVelocity = self.massFlowRateToVelocity(self.coolingChannels.massFlowRate, coolantState.D, self.coolingChannels.channelInstance.totalChannelArea)
-                coolantReynoldsNumber = self.reynoldsNumber(coolantState.D, coolantVelocity, self.coolingChannels.channelInstance.midWidth, coolantState.viscosity)
+                coolantReynoldsNumber = self.reynoldsNumber(coolantState.D, coolantVelocity, self.coolingChannels.channelInstance.hydraulicDiameter, coolantState.viscosity)
                 coolantPrandtlNumber = self.prandtlNumber(coolantState.cp, coolantState.viscosity, coolantState.thermalConductivity)
 
                 # Initialise the state of the coolant at the station using the value of the previous station
@@ -187,7 +196,11 @@ class RegenerativeCooling:
 
                 iterations += 1
 
-            totalIterations += iterations
+            stationLength = distanceBetweenTwoPoints([self.thrustChamber.axialCoords[i], self.thrustChamber.radialCoords[i]],
+                                                    [self.thrustChamber.axialCoords[i+1], self.thrustChamber.radialCoords[i+1]])
+
+            frictionFactor = self.colebrookEquation(self.coolingChannels.wallRoughnessHeight, self.coolingChannels.channelInstance.hydraulicDiameter, coolantReynoldsNumber, convergenceCriteria=convergenceCriteria)
+            pressureLoss = self.pressureLoss(frictionFactor, stationLength, self.coolingChannels.channelInstance.hydraulicDiameter, coolantState.D, coolantVelocity)
 
             print("Solved station " + str(i) + " in " + str(iterations) + " iterations")
                 
@@ -198,12 +211,12 @@ class RegenerativeCooling:
             self.coolantBulkTemps[i] = coolantState.T
             self.coolantPressures[i] = coolantState.P
 
-            stationLength = distanceBetweenTwoPoints([self.thrustChamber.axialCoords[i], self.thrustChamber.radialCoords[i]],
-                                                    [self.thrustChamber.axialCoords[i+1], self.thrustChamber.radialCoords[i+1]])
             newCoolantBulkTemp = coolantState.T + ((gasSideHeatFlux * 2 * pi * self.thrustChamber.radialCoords[i] * stationLength) / (self.coolingChannels.massFlowRate * coolantState.cp))
-            newCoolantPressure = coolantState.P
+            newCoolantPressure = coolantState.P - pressureLoss
 
             coolantState.defineState("T", newCoolantBulkTemp, "P", newCoolantPressure)
+
+            totalIterations += iterations
 
             i -= 1
 
@@ -211,17 +224,20 @@ class RegenerativeCooling:
         self.coolantEnthalpyChange = self.coolantOutletState.H - self.coolantInletState.H
         self.totalHeatPower = self.coolingChannels.massFlowRate * self.coolantEnthalpyChange
 
+        print("---")
         print("\nHeat transfer calculaton complete")
         print("Total iterations: " + str(totalIterations))
         print("---")
         print("Coolant Enthalpy Change: " + str(self.coolantEnthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
+        print("Total Pressure Loss: " + str(self.coolantOutletState.P - self.coolantInletState.P) + " Pa")
+        print("---")
 
     def bartzEquation(self, localArea, gasSideWallTemp, localMachNumber):
 
         firstBracket = (0.026 / self.thrustChamber.throatDiameter)
         secondBracket = (((self.thrustChamber.chamberViscosity ** 0.2) * self.thrustChamber.chamberHeatCapacity) / (self.thrustChamber.chamberPrandtlNumber ** 0.6))
-        thirdBracket = ((self.thrustChamber.chamberPressure * G) / self.thrustChamber.cStar) ** 0.8
+        thirdBracket = ((self.thrustChamber.chamberPressureSI * G) / self.thrustChamber.cStar) ** 0.8
         fourthBracket = (self.thrustChamber.throatDiameter / self.thrustChamber.throatAverageRadiusOfCurvature) ** 0.1
         fifthBracket = (self.thrustChamber.throatArea / localArea) ** 0.9
         sigma = self.bartzCorrectionFactor(gasSideWallTemp, localMachNumber)
@@ -235,6 +251,24 @@ class RegenerativeCooling:
 
         return 1 / (denominatorFirstBracket * denominatorSecondBracket)
 
+    def colebrookEquation(self, channelRoughness, hydraulicDiameter, reynoldsNumber, convergenceCriteria=0.01):
+
+        x = -2 * log10(channelRoughness / (3.7 * hydraulicDiameter))
+        xPrev = x + 10
+
+        while abs(abs(x) - abs(xPrev)) > convergenceCriteria:
+
+            xPrev = x
+            x = -2 * log10((channelRoughness / (3.7 * hydraulicDiameter)) + ((2.51 * xPrev) / reynoldsNumber))
+
+        frictionFactor = (1 / x) ** 2
+
+        return frictionFactor
+        
+    def pressureLoss(self, frictionFactor, length, hydraulicDiameter, density, velocity):
+
+        return frictionFactor * (length / hydraulicDiameter) * 0.5 * density * (velocity ** 2)
+    
     def reynoldsNumber(self, density, velocity, characteristicLength, visocity):
 
         return (density * velocity * characteristicLength) / visocity
