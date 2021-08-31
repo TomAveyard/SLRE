@@ -11,10 +11,10 @@ testThrustChamber.getChamberGeometry(1.05,
                                      0.05, 
                                      entranceRadiusOfCurvatureFactor=0.75, 
                                      throatEntranceStartAngle=-135, 
-                                     numberOfPointsConverging=100,
-                                     numberOfPointsStraight=20)
+                                     numberOfPointsConverging=20,
+                                     numberOfPointsStraight=3)
 
-testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=100)
+testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=20)
 testThrustChamber.getThrustChamberCoords()
 
 testCoolingChannels = CoolingChannels(testThrustChamber.fuelMassFlowRate, 40, 0.005, 0.005, 0.02, 300, 5*10**(-6))
