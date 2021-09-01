@@ -5,16 +5,16 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 
 import matplotlib.pyplot as plt
 
-testThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 35, fac=True, CR=5, ambientPressure=1)
+testThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 30, fac=True, CR=4, ambientPressure=0.65)
 
 testThrustChamber.getChamberGeometry(1.05,
-                                     0.05, 
+                                     0.1, 
                                      entranceRadiusOfCurvatureFactor=0.75, 
                                      throatEntranceStartAngle=-135, 
-                                     numberOfPointsConverging=20,
-                                     numberOfPointsStraight=3)
+                                     numberOfPointsConverging=200,
+                                     numberOfPointsStraight=10)
 
-testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=20)
+testThrustChamber.getRaoBellNozzleGeometry(0.6, numberOfPoints=200)
 testThrustChamber.getThrustChamberCoords()
 
 testCoolingChannels = CoolingChannels(testThrustChamber.fuelMassFlowRate, 40, 0.005, 0.005, 0.02, 300, 5*10**(-6))
