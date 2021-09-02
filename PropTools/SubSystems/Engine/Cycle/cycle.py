@@ -1,3 +1,4 @@
+from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.Tank.tank import Tank
 from PropTools.SubSystems.Engine.Turbopump.pump import Pump
 from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine
@@ -6,21 +7,10 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 
 class Line:
 
-    def __init__(self, tank, intermediateComponents, thrustChamber):
+    def __init__(self, tank: Tank, intermediateComponents, thrustChamber: ThrustChamber):
+        
+        propellantState = Propellant(tank.outletState.name)
 
-        for i in intermediateComponents:
-
-            if i.lower() == "pump":
-
-                pass
-
-            elif i.lower() == "turbine":
-
-                pass
-
-            elif i.lower() == "regenerative cooling" or "regen cooling" or "regen" or "hx":
-
-                pass
 
 class Cycle:
 

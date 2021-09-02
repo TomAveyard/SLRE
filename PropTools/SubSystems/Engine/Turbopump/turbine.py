@@ -5,10 +5,19 @@ class Turbine(Component):
 
     def __init__(self, inletState: Propellant, outletPressure, massFlowRate, isentropicEfficiency):
 
-        super().__init__()
-        self.inletState = inletState
-        self.outletPressure = outletPressure
+        super().__init__() # Contains self.inletState, self.outletState, self.type
         self.isentropicEfficiency = isentropicEfficiency
+        self.type = "Turbine"
+
+        self.deltaHIsentropic = None
+        self.deltaHReal = None
+        self.massFlowRate = None
+        self.power = None
+
+    def calculate(self, inletState: Propellant, outletPressure, massFlowRate):
+
+        self.inletState = inletState
+        outletPressure = outletPressure
 
         # Defines the isentropic outlet state
         outletStateIsentropic = Propellant(self.inletState.name)

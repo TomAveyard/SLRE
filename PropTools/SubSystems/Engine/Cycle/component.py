@@ -4,3 +4,4 @@ class Component:
 
         self.inletState = None
         self.outletState = None
+        self.type = None
