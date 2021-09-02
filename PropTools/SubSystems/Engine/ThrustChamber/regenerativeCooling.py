@@ -4,6 +4,7 @@ from math import sqrt, pi, log10
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.constants import G
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
+from PropTools.SubSystems.Engine.Cycle.component import Component
 
 # Class to store information about the cooling channel design
 # Channels are modelled as a sector of a annulus
@@ -76,13 +77,16 @@ class ChannelDimensions:
 # Class to store information about the regenerative cooling system
 # Performs an iterative calculation for every point defined by the input thrust chamber object
 # with the channel dimensions defined by the cooling channel object
-class RegenerativeCooling:
+class RegenerativeCooling(Component):
 
-    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, coolantInletState: Propellant):
+    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, inletState: Propellant):
+
+        super().__init__()
+        self.inletState = inletState
+        self.type = "regenerative cooling"
 
         self.thrustChamber = thrustChamber
         self.coolingChannels = coolingChannels
-        self.coolantInletState = coolantInletState
 
         self.numberOfStations = len(self.thrustChamber.axialCoords)
 
@@ -93,8 +97,8 @@ class RegenerativeCooling:
         self.coolantBulkTemps = np.zeros(self.numberOfStations)
         self.coolantPressures = np.zeros(self.numberOfStations)
 
-        self.coolantOutletState = Propellant(self.coolantInletState.name)
-        self.coolantEnthalpyChange = None
+        self.outletState = Propellant(self.inletState.name)
+        self.enthalpyChange = None
         self.totalHeatPower = None
 
     def calculate(self, convergenceCriteria=0.01):
@@ -106,14 +110,14 @@ class RegenerativeCooling:
         i = self.numberOfStations - 1
 
         # Get values for first station at very end of nozzle
-        self.coolantBulkTemps[i] = self.coolantInletState.T
-        self.coolantPressures[i] = self.coolantInletState.P
+        self.coolantBulkTemps[i] = self.inletState.T
+        self.coolantPressures[i] = self.inletState.P
         self.adiabaticWallTemps[i] = self.getLocalAdiabaticWallTempNozzle(self.thrustChamber.exitArea)
 
         # Propellant objects for calculating the changes in the coolant state as it passes through the channels
-        coolantState = Propellant(self.coolantInletState.name)
-        coolantState.defineState("T", self.coolantInletState.T, "P", self.coolantInletState.P)
-        surfaceCoolantState = Propellant(self.coolantInletState.name)
+        coolantState = Propellant(self.inletState.name)
+        coolantState.defineState("T", self.inletState.T, "P", self.inletState.P)
+        surfaceCoolantState = Propellant(self.inletState.name)
 
         i -= 1
 
@@ -220,17 +224,17 @@ class RegenerativeCooling:
 
             i -= 1
 
-        self.coolantOutletState.defineState("T", self.coolantBulkTemps[1], "P", self.coolantPressures[1])
-        self.coolantEnthalpyChange = self.coolantOutletState.H - self.coolantInletState.H
-        self.totalHeatPower = self.coolingChannels.massFlowRate * self.coolantEnthalpyChange
+        self.outletState.defineState("T", self.coolantBulkTemps[1], "P", self.coolantPressures[1])
+        self.enthalpyChange = self.outletState.H - self.inletState.H
+        self.totalHeatPower = self.coolingChannels.massFlowRate * self.enthalpyChange
 
         print("---")
         print("\nHeat transfer calculaton complete")
         print("Total iterations: " + str(totalIterations))
         print("---")
-        print("Coolant Enthalpy Change: " + str(self.coolantEnthalpyChange))
+        print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
-        print("Total Pressure Loss: " + str(self.coolantOutletState.P - self.coolantInletState.P) + " Pa")
+        print("Total Pressure Loss: " + str(self.outletState.P - self.inletState.P) + " Pa")
         print("---")
 
     def bartzEquation(self, localArea, gasSideWallTemp, localMachNumber):
