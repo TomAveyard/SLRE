@@ -1,10 +1,11 @@
+from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 
-# Calculates state of propellant at a turbine outlet from an inlet state, target outlet pressure, and isentropic efficiency
-class Turbine(Propellant):
+class Turbine(Component):
 
     def __init__(self, inletState: Propellant, outletPressure, massFlowRate, isentropicEfficiency):
 
+        super().__init__()
         self.inletState = inletState
         self.outletPressure = outletPressure
         self.isentropicEfficiency = isentropicEfficiency

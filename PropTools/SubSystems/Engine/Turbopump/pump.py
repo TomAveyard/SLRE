@@ -1,9 +1,11 @@
+from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 
-class Pump(Propellant):
+class Pump(Component):
 
     def __init__(self, inletState: Propellant, outletPressure, massFlowRate, isentropicEfficiency):
 
+        super().__init__()
         self.inletState = inletState
         self.outletPressure = outletPressure
         self.isentropicEfficiency = isentropicEfficiency
