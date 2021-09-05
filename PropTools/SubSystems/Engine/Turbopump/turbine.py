@@ -3,11 +3,11 @@ from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 
 class Turbine(Component):
 
-    def __init__(self, inletState: Propellant, outletPressure, massFlowRate, isentropicEfficiency):
+    def __init__(self, isentropicEfficiency):
 
         super().__init__() # Contains self.inletState, self.outletState, self.type
         self.isentropicEfficiency = isentropicEfficiency
-        self.type = "Turbine"
+        self.type = "turbine"
 
         self.deltaHIsentropic = None
         self.deltaHReal = None

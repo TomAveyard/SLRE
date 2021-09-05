@@ -11,7 +11,6 @@ from PropTools.SubSystems.Engine.Cycle.component import Component
 class CoolingChannels:
 
     def __init__(self,
-        massFlowRate, 
         numberOfChannels,
         wallThickness,
         midRibThickness,
@@ -19,7 +18,6 @@ class CoolingChannels:
         wallConductivity, 
         wallRoughnessHeight):
 
-        self.massFlowRate = massFlowRate
         self.numberOfChannels = numberOfChannels
         self.wallThickness = wallThickness
         self.midRibThickness = midRibThickness
@@ -79,10 +77,9 @@ class ChannelDimensions:
 # with the channel dimensions defined by the cooling channel object
 class RegenerativeCooling(Component):
 
-    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, inletState: Propellant):
+    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels):
 
         super().__init__()
-        self.inletState = inletState
         self.type = "regenerative cooling"
 
         self.thrustChamber = thrustChamber
@@ -97,15 +94,22 @@ class RegenerativeCooling(Component):
         self.coolantBulkTemps = np.zeros(self.numberOfStations)
         self.coolantPressures = np.zeros(self.numberOfStations)
 
-        self.outletState = Propellant(self.inletState.name)
+        self.outletState = None
         self.enthalpyChange = None
         self.totalHeatPower = None
 
-    def calculate(self, convergenceCriteria=0.01):
+        self.inletState = None
+        self.massFlowRate = None
+
+    def calculate(self, inletState: Propellant, massFlowRate, convergenceCriteria=0.01):
 
         print("---")
         print("Starting Heat Transfer Calculation")
         print("Number Of Stations: " + str(self.numberOfStations))
+
+        self.inletState = inletState
+        self.outletState = Propellant(self.inletState.name)
+        self.massFlowRate = massFlowRate
 
         i = self.numberOfStations - 1
 
@@ -164,7 +168,7 @@ class RegenerativeCooling(Component):
 
                 # Calculate flow properties for the channel at the station
                 self.coolingChannels.channelInstance.getChannelDimensions(area)
-                coolantVelocity = self.massFlowRateToVelocity(self.coolingChannels.massFlowRate, coolantState.D, self.coolingChannels.channelInstance.totalChannelArea)
+                coolantVelocity = self.massFlowRateToVelocity(self.massFlowRate, coolantState.D, self.coolingChannels.channelInstance.totalChannelArea)
                 coolantReynoldsNumber = self.reynoldsNumber(coolantState.D, coolantVelocity, self.coolingChannels.channelInstance.hydraulicDiameter, coolantState.viscosity)
                 coolantPrandtlNumber = self.prandtlNumber(coolantState.cp, coolantState.viscosity, coolantState.thermalConductivity)
 
@@ -215,7 +219,7 @@ class RegenerativeCooling(Component):
             self.coolantBulkTemps[i] = coolantState.T
             self.coolantPressures[i] = coolantState.P
 
-            newCoolantBulkTemp = coolantState.T + ((gasSideHeatFlux * 2 * pi * self.thrustChamber.radialCoords[i] * stationLength) / (self.coolingChannels.massFlowRate * coolantState.cp))
+            newCoolantBulkTemp = coolantState.T + ((gasSideHeatFlux * 2 * pi * self.thrustChamber.radialCoords[i] * stationLength) / (self.massFlowRate * coolantState.cp))
             newCoolantPressure = coolantState.P - pressureLoss
 
             coolantState.defineState("T", newCoolantBulkTemp, "P", newCoolantPressure)
@@ -226,7 +230,7 @@ class RegenerativeCooling(Component):
 
         self.outletState.defineState("T", self.coolantBulkTemps[1], "P", self.coolantPressures[1])
         self.enthalpyChange = self.outletState.H - self.inletState.H
-        self.totalHeatPower = self.coolingChannels.massFlowRate * self.enthalpyChange
+        self.totalHeatPower = self.massFlowRate * self.enthalpyChange
 
         print("---")
         print("\nHeat transfer calculaton complete")
