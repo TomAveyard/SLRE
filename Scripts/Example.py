@@ -11,7 +11,7 @@ from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-plot = "coolant pressure"
+plot = "coolant temps"
 
 testThrustChamber = ThrustChamber('methane', 'oxygen', 7.25*10**3, 40, mixtureRatioOverride=3.16,fac=True, CR=7.5, ambientPressure=0.65)
 

@@ -1,6 +1,6 @@
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import sqrt, pi, log10
+from math import sqrt, pi, log10, tanh
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.constants import G
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
@@ -77,13 +77,14 @@ class ChannelDimensions:
 # with the channel dimensions defined by the cooling channel object
 class RegenerativeCooling(Component):
 
-    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels):
+    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, includeFinCorrection=True):
 
         super().__init__()
         self.type = "regenerative cooling"
 
         self.thrustChamber = thrustChamber
         self.coolingChannels = coolingChannels
+        self.includeFinCorrection = includeFinCorrection
 
         self.numberOfStations = len(self.thrustChamber.axialCoords)
 
@@ -187,6 +188,10 @@ class RegenerativeCooling(Component):
                     # Calculate heat transfer coefficient for the coolant side
                     coolantNusseltNumber = self.siederTateEquation(coolantReynoldsNumber, coolantPrandtlNumber, coolantState.viscosity, surfaceCoolantState.viscosity)
                     coolantSideHeatTransferCoefficient = self.nusseltNumberToHeatTransferCoefficient(coolantNusseltNumber, self.coolingChannels.channelInstance.midWidth, coolantState.thermalConductivity)
+                    
+                    if self.includeFinCorrection:
+                        finCorrectionFactor = self.finCorrectionFactor(coolantSideHeatTransferCoefficient, self.coolingChannels.midRibThickness, self.coolingChannels.wallConductivity, self.coolingChannels.channelHeight)
+                        coolantSideHeatTransferCoefficient = self.finCorrection(coolantSideHeatTransferCoefficient, finCorrectionFactor, self.coolingChannels.channelInstance.midWidth, self.coolingChannels.channelHeight, self.coolingChannels.midRibThickness)
 
                     # Calculate the coolant side wall temperature using the heat flux calculated from the gas side
                     coolantSideWallTemp = (gasSideHeatFlux / coolantSideHeatTransferCoefficient) + coolantState.T
@@ -394,4 +399,27 @@ class RegenerativeCooling(Component):
         denominator = 1 + ((gamma-1) / 2) * (mach ** 2)
 
         return gasTemp * (numerator / denominator)
+
+    def curvatureCorrection(self):
+
+        return 1
+
+    def roughnessCorrection(self):
+
+        return 1
+
+    def finCorrectionFactor(self, heatTransferCoeffcient, ribThickness, thermalConductivity, channelHeight):
+        
+        temp = sqrt((2 * heatTransferCoeffcient * ribThickness) / thermalConductivity) * (channelHeight / ribThickness)
+
+        return tanh(temp) / temp
+
+    def finCorrection(self, heatTransferCoefficient, finCorrectionFactor, channelWidth, channelHeight, ribThickness):
+
+        numerator = channelWidth + 2 * finCorrectionFactor * channelHeight
+        denominator = channelWidth + ribThickness
+
+        return heatTransferCoefficient * (numerator / denominator)
+
+        
 
