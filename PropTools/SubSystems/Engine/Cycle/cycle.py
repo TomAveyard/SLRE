@@ -1,4 +1,6 @@
-from re import L
+from copy import deepcopy
+
+from numpy.linalg import solve
 from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.Tank.tank import Tank
@@ -9,52 +11,86 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 
 class Line:
 
-    def __init__(self, tank: Tank, intermediateComponents: "list[Component]", thrustChamber: ThrustChamber, propellant):
-        
-        propellantState = Propellant(tank.outletState.name)
-        propellantState.defineState("T", tank.outletState.T, "P", tank.outletState.P)
+    def __init__(self, inletState: Propellant, massFlowRate: float, components: "list[Component]", convergenceCriteria=0.1):
 
-        self.states = [propellantState]
+        self.inletState = inletState
+        self.massFlowRate = massFlowRate
+        self.components = components
+        self.convergenceCriteria = convergenceCriteria
 
-        if propellant.lower() == "fuel":
-            self.massFlowRate = thrustChamber.fuelMassFlowRate
-        elif propellant.lower() == "ox" or propellant.lower() == "oxidiser" or propellant.lower() == "oxidizer":
-            self.massFlowRate = thrustChamber.oxMassFlowRate
+        self.stateTracker = deepcopy(self.inletState)
+        self.states = [deepcopy(self.stateTracker)]
 
-        if "regenerative cooling" in intermediateComponents:
+        for i in components:
 
-            for i in intermediateComponents:
+            if type(i) is Pump:
 
-                if i.type == "pump":
+                i.calculate(self.stateTracker, self.massFlowRate)
 
-                    pass
+            elif type(i) is Turbine:
 
-                if i.type == "turbine":
+                i.calculate(self.stateTracker, self.massFlowRate)
 
-                    pass
+            elif type(i) is RegenerativeCooling:
 
-                if i.type == "regenerative cooling":
+                i.calculate(self.stateTracker, self.massFlowRate, convergenceCriteria=self.convergenceCriteria)
 
-                    pass
 
-        else:
+            self.stateTracker = deepcopy(i.outletState)
+            self.states.append(deepcopy(self.stateTracker))
 
-            for i in intermediateComponents:
-
-                if i.type == "pump":
-
-                    i.calculate(propellantState, thrustChamber.injectionPressure, self.massFlowRate)
-                    self.states.append(i.outletState)
-                    propellantState.defineState("T", i.outletState.T, "P", i.outletState.P)
-
-                if i.type == "turbine":
-
-                    pass
-
-        
+        self.outletState = self.states[-1]
 
 class Cycle:
 
-    def __init__(self, fuelLine, oxLine):
+    def __init__(self, fuelLine: Line, oxLine: Line, thrustChamber: ThrustChamber):
 
-        pass
+        self.fuelLine = fuelLine
+        self.oxLine = oxLine
+        self.thrustChamber = thrustChamber
+
+        self.powerBalance = 0
+        self.pumpPower = 0
+        self.turbinePower = 0
+
+        for i in fuelLine.components:
+
+            if type(i) is Pump:
+
+                self.pumpPower += i.power
+
+            elif type(i) is Turbine:
+
+                self.turbinePower += i.power
+
+        for i in oxLine.components:
+
+            if type(i) is Pump:
+
+                self.pumpPower += i.power
+
+            elif type(i) is Turbine:
+
+                self.turbinePower += i.power
+
+        self.powerBalance = self.turbinePower + self.pumpPower
+
+        print("---")
+        print("Total Pump Power: " + str(self.pumpPower) + " W")
+        print("Total Turbine Power: " + str(self.turbinePower) + " W")
+        print("Cycle Power Balance: " + str(self.powerBalance) + " W")
+
+        
+
+            
+
+
+
+
+        
+
+
+
+        
+
+

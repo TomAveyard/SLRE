@@ -233,13 +233,12 @@ class RegenerativeCooling(Component):
         self.totalHeatPower = self.massFlowRate * self.enthalpyChange
 
         print("---")
-        print("\nHeat transfer calculaton complete")
+        print("Heat transfer calculaton complete")
         print("Total iterations: " + str(totalIterations))
         print("---")
         print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
         print("Total Pressure Loss: " + str(self.outletState.P - self.inletState.P) + " Pa")
-        print("---")
 
     def bartzEquation(self, localArea, gasSideWallTemp, localMachNumber):
 
