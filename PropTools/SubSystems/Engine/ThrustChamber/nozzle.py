@@ -168,7 +168,8 @@ class RaoBellNozzle(Nozzle):
 
         numberOfBezierPoints = self.numberOfPoints - i
 
-        for point in range(numberOfBezierPoints):
+        # Start from 1 to avoid duplicating the last point of the circular section
+        for point in range(1, numberOfBezierPoints):
 
             t = point / numberOfBezierPoints
 

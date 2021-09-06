@@ -257,8 +257,10 @@ class ThrustChamber:
     def getThrustChamberCoords(self):
 
         self.throatAverageRadiusOfCurvature = (self.nozzle.throatRadiusOfCurvature + self.combustionChamber.entranceRadiusOfCurvature) / 2
-        self.axialCoords = np.concatenate((self.combustionChamber.axialCoords, self.nozzle.axialCoords))
-        self.radialCoords = np.concatenate((self.combustionChamber.radialCoords, self.nozzle.radialCoords))
+
+        # First nozzle coord is omitted to avoid duplicting throat coord
+        self.axialCoords = np.concatenate((self.combustionChamber.axialCoords[:-2], self.nozzle.axialCoords))
+        self.radialCoords = np.concatenate((self.combustionChamber.radialCoords[:-2], self.nozzle.radialCoords))
         
         self.getSurfaceArea()
 

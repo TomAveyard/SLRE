@@ -108,11 +108,12 @@ class CombustionChamber:
 
         cylindricalLength = remainingVolume / self.chamberArea
 
-        axialCoordsStraight = np.linspace(convergingAxialCoords[-1], -cylindricalLength, self.numberOfPointsStraight)
+        # Add one to the numberOfPointsStraight to as there is a duplicate point where the straight and converging sections meet, which needs to be omitted
+        axialCoordsStraight = np.linspace(convergingAxialCoords[-1], -cylindricalLength, self.numberOfPointsStraight + 1)
 
         for i in range(self.numberOfPointsStraight):
 
-            self.axialCoords[self.numberOfPointsConverging + i] = axialCoordsStraight[i]
+            self.axialCoords[self.numberOfPointsConverging + i] = axialCoordsStraight[i + 1]
             self.radialCoords[self.numberOfPointsConverging + i] = self.chamberRadius
 
         self.axialCoords = np.flip(self.axialCoords, 0)

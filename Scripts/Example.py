@@ -11,7 +11,7 @@ from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-plot = "coolant temps"
+plot = ""
 
 testThrustChamber = ThrustChamber('methane', 'oxygen', 7.25*10**3, 40, mixtureRatioOverride=3.16,fac=True, CR=7.5, ambientPressure=0.65)
 
@@ -22,7 +22,8 @@ testThrustChamber.getChamberGeometry(1.5,
                                      numberOfPointsConverging=30,
                                      numberOfPointsStraight=10)
 
-testThrustChamber.getRaoBellNozzleGeometry(0.7, numberOfPoints=40)
+testThrustChamber.getRaoBellNozzleGeometry(0.8, numberOfPoints=40)
+#testThrustChamber.getConicalNozzleGeometry(numberOfPoints=40)
 testThrustChamber.getThrustChamberCoords()
 
 print(testThrustChamber.fuelMassFlowRate)
@@ -65,6 +66,16 @@ elif plot == "wall temps":
 elif plot == "coolant pressure":
     fig, ax = plt.subplots()
     ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantPressures[1:-1])
+    plt.show()
+    exit()
+elif plot == "reynold numbers":
+    fig, ax = plt.subplots()
+    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantReynoldsNumbers[1:-1])
+    plt.show()
+    exit()
+elif plot == "nusselt numbers":
+    fig, ax = plt.subplots()
+    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantNusseltNumbers[1:-1])
     plt.show()
     exit()
 
