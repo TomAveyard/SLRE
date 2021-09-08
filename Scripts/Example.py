@@ -11,22 +11,22 @@ from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-plot = ""
+plot = "heat flux"
 
-testThrustChamber = ThrustChamber('methane', 'oxygen', 7.25*10**3, 40, mixtureRatioOverride=3.16,fac=True, CR=7.5, ambientPressure=0.65)
+includeCorrections = False
+
+testThrustChamber = ThrustChamber('methane', 'oxygen', 7.25*10**3, 40, mixtureRatioOverride=3.16, fac=True, CR=7.5, ambientPressure=0.65)
 
 testThrustChamber.getChamberGeometry(1.5,
                                      0.05, 
                                      entranceRadiusOfCurvatureFactor=0.75, 
                                      throatEntranceStartAngle=-135, 
-                                     numberOfPointsConverging=30,
-                                     numberOfPointsStraight=10)
+                                     numberOfPointsConverging=50,
+                                     numberOfPointsStraight=20)
 
-testThrustChamber.getRaoBellNozzleGeometry(0.8, numberOfPoints=40)
-#testThrustChamber.getConicalNozzleGeometry(numberOfPoints=40)
+#testThrustChamber.getRaoBellNozzleGeometry(0.8, numberOfPoints=100)
+testThrustChamber.getConicalNozzleGeometry(numberOfPoints=100)
 testThrustChamber.getThrustChamberCoords()
-
-print(testThrustChamber.fuelMassFlowRate)
 
 if plot == "thrust chamber":
     fig, ax = plt.subplots()
@@ -41,12 +41,12 @@ ox = Propellant(testThrustChamber.ox.name)
 fuel.defineState("T", 100, "P", 3*10**5)
 
 testFuelTank = Tank(fuel)
-testFuelPump = Pump(0.7, pressureRise=57*10**5)
-testCoolingChannels = CoolingChannels(72, 0.001, 0.001, 0.001, 365, 6*10**(-6))
-testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels)
+testFuelPump = Pump(0.7, outletPressure=60e5)
+testCoolingChannels = CoolingChannels(72, 1e-3, 1e-3, 1e-3, 365, 6e-6)
+testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, coolantSideHeatTransferCorrelation="sieder-tate", includeCurvatureCorrection=includeCorrections, includeFinCorrection=includeCorrections, includeRoughnessCorrection=includeCorrections)
 testTurbine = Turbine(0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
 
-testFuelLine = Line(testFuelTank.outletState, testThrustChamber.fuelMassFlowRate, [testFuelPump, testRegenerativeCooling, testTurbine])
+testFuelLine = Line(testFuelTank.outletState, testThrustChamber.fuelMassFlowRate, [testFuelPump, testRegenerativeCooling, testTurbine], convergenceCriteria=0.1)
 
 if plot == "heat flux":
     fig, ax = plt.subplots()
@@ -58,9 +58,14 @@ elif plot == "coolant temps":
     ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantBulkTemps[1:-1])
     plt.show()
     exit()
-elif plot == "wall temps":
+elif plot == "gas side wall temps":
     fig, ax = plt.subplots()
     ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.gasSideWallTemps[1:-1])
+    plt.show()
+    exit()
+elif plot == "adiabatic wall temps":
+    fig, ax = plt.subplots()
+    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.adiabaticWallTemps[1:-1])
     plt.show()
     exit()
 elif plot == "coolant pressure":
@@ -70,12 +75,32 @@ elif plot == "coolant pressure":
     exit()
 elif plot == "reynold numbers":
     fig, ax = plt.subplots()
-    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantReynoldsNumbers[1:-1])
+    ax.plot(testThrustChamber.axialCoords[1:-1], [i / 10**4 for i in testRegenerativeCooling.coolantReynoldsNumbers[1:-1]])
     plt.show()
     exit()
 elif plot == "nusselt numbers":
     fig, ax = plt.subplots()
     ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantNusseltNumbers[1:-1])
+    plt.show()
+    exit()
+elif plot == "prandtl numbers":
+    fig, ax = plt.subplots()
+    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantPrandtlNumbers[1:-1])
+    plt.show()
+    exit()
+elif plot == "gas side heat transfer coefficients":
+    fig, ax = plt.subplots()
+    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.gasSideHeatTransferCoefficients[1:-1])
+    plt.show()
+    exit()
+elif plot == "coolant side heat transfer coefficients":
+    fig, ax = plt.subplots()
+    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.coolantSideHeatTransferCoefficients[1:-1])
+    plt.show()
+    exit()
+elif plot == "channel area":
+    fig, ax = plt.subplots()
+    ax.plot(testThrustChamber.axialCoords[1:-1], testRegenerativeCooling.channelAreas[1:-1])
     plt.show()
     exit()
 

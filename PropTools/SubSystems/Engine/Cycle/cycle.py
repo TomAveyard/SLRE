@@ -1,6 +1,4 @@
 from copy import deepcopy
-
-from numpy.linalg import solve
 from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.Tank.tank import Tank
