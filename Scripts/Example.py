@@ -11,18 +11,11 @@ from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-plot = "gas side wall temps"
+plot = "heat flux"
 
 includeCorrections = True
 
 testThrustChamber = ThrustChamber('methane', 'oxygen', 7.7*10**3, 40, mixtureRatioOverride=3.16, fac=True, CR=15, ambientPressure=0.3)
-
-a = testThrustChamber.getExitTransportPropertiesAtExpansionRatio(40)
-
-p = (a[0] * a[1]*1e-3) / (a[2]*1e2)
-print(a[3])
-print(p)
-print(p/a[3])
 
 testThrustChamber.getChamberGeometry(2.75,
                                      0.065, 
