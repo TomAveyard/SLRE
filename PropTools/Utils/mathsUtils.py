@@ -157,7 +157,7 @@ def radiusOfCurvature3Points2D(point1, point2, point3, returnCenterPoint=False):
         ma = (point2[1] - point1[1]) / (point2[0] - point1[0])
         mb = (point3[1] - point2[1]) / (point3[0] - point2[0])
 
-        if (mb - ma) < 1e-3:
+        if (mb - ma) < 1e-12:
             return None, None
 
         centrex = (ma * mb * (point1[1] - point3[1]) + mb * (point1[0] + point2[0]) - ma * (point2[0] + point3[0])) / (2 * (mb - ma))
