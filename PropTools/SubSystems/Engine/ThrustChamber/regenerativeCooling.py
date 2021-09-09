@@ -1,16 +1,24 @@
+from io import IncrementalNewlineDecoder
+from sys import exit
+from chemicals import temperature
+
+from matplotlib.pyplot import cool
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import sqrt, pi, log10
+from math import sqrt, pi, log10, tanh
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.constants import G
-from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
+from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints, radiusOfCurvature3Points2D
+from PropTools.SubSystems.Engine.Cycle.component import Component
+from PropTools.Thermo.dimensionlessNumbers import reynoldsNumber, prandtlNumber
+import PropTools.Thermo.heatTransfer as ht
+import PropTools.Thermo.fluidDynamics as fd
 
 # Class to store information about the cooling channel design
 # Channels are modelled as a sector of a annulus
 class CoolingChannels:
 
     def __init__(self,
-        massFlowRate, 
         numberOfChannels,
         wallThickness,
         midRibThickness,
@@ -18,7 +26,6 @@ class CoolingChannels:
         wallConductivity, 
         wallRoughnessHeight):
 
-        self.massFlowRate = massFlowRate
         self.numberOfChannels = numberOfChannels
         self.wallThickness = wallThickness
         self.midRibThickness = midRibThickness
@@ -42,11 +49,14 @@ class ChannelDimensions:
         self.bottomRadius = None
         self.midRadius = None
         self.topRadius = None
-        self.channelAngle = None
-        self.ribAngle = None
+        self.totalChannelAngle = None
+        self.individualChannelAngle = None
+        self.totalRibAngle = None
+        self.individualRibAngle = None
         self.thrustChamberRadius = None
         self.individualChannelArea = None
         self.totalChannelArea = None
+        self.sideLength = None
         self.wettedPerimeter = None
         self.hydraulicDiameter = None
 
@@ -59,30 +69,39 @@ class ChannelDimensions:
         self.midRadius = (self.bottomRadius + self.topRadius) / 2
         self.height = self.topRadius - self.bottomRadius
 
-        self.ribAngle = (360 * self.coolingChannels.midRibThickness) / (2 * pi * self.midRadius)
-        self.channelAngle = (360 - self.ribAngle * self.coolingChannels.numberOfChannels) / self.coolingChannels.numberOfChannels
+        self.totalRibAngle = (360 * self.coolingChannels.midRibThickness * self.coolingChannels.numberOfChannels) / (2 * pi * self.midRadius)
+        self.individualRibAngle = self.totalRibAngle / self.coolingChannels.numberOfChannels
+        self.totalChannelAngle = 360 - self.totalRibAngle
+        self.individualChannelAngle = self.totalChannelAngle / self.coolingChannels.numberOfChannels
 
-        self.bottomWidth = 2 * pi * self.bottomRadius * self.channelAngle / 360
-        self.topWidth = 2 * pi * self.topRadius * self.channelAngle / 360
-        self.midWidth = 2 * pi * self.midRadius * self.channelAngle / 360
+        self.bottomWidth = 2 * pi * self.bottomRadius * (self.individualChannelAngle / 360)
+        self.topWidth = 2 * pi * self.topRadius * (self.individualChannelAngle / 360)
+        self.midWidth = 2 * pi * self.midRadius * (self.individualChannelAngle / 360)
 
-        self.individualChannelArea = 0.5 * self.height * (self.bottomWidth + self.topWidth)
+        self.individualChannelArea = 0.5 * self.coolingChannels.channelHeight * (self.bottomWidth + self.topWidth)
         self.totalChannelArea = self.individualChannelArea * self.coolingChannels.numberOfChannels
 
-        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.height * 2)
+        self.sideLength = sqrt((((self.topWidth - self.bottomWidth) / 2) ** 2) + (self.height ** 2))
+        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.sideLength * 2)
         self.hydraulicDiameter = 4 * self.individualChannelArea / self.wettedPerimeter
 
-   
 # Class to store information about the regenerative cooling system
 # Performs an iterative calculation for every point defined by the input thrust chamber object
 # with the channel dimensions defined by the cooling channel object
-class RegenerativeCooling:
+class RegenerativeCooling(Component):
 
-    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, coolantInletState: Propellant):
+    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, coolantSideHeatTransferCorrelation="Dittus-Boelter", includeFinCorrection=True, includeCurvatureCorrection=True, includeRoughnessCorrection=True):
+
+        super().__init__()
+        self.type = "regenerative cooling"
 
         self.thrustChamber = thrustChamber
         self.coolingChannels = coolingChannels
-        self.coolantInletState = coolantInletState
+        self.coolantSideHeatTransferCorrelation = coolantSideHeatTransferCorrelation
+
+        self.includeFinCorrection = includeFinCorrection
+        self.includeCurvatureCorrection = includeCurvatureCorrection
+        self.includeRoughnessCorrection = includeRoughnessCorrection
 
         self.numberOfStations = len(self.thrustChamber.axialCoords)
 
@@ -92,299 +111,244 @@ class RegenerativeCooling:
         self.coolantSideWallTemps = np.zeros(self.numberOfStations)
         self.coolantBulkTemps = np.zeros(self.numberOfStations)
         self.coolantPressures = np.zeros(self.numberOfStations)
+        self.coolantReynoldsNumbers = np.zeros(self.numberOfStations)
+        self.coolantNusseltNumbers = np.zeros(self.numberOfStations)
+        self.coolantPrandtlNumbers = np.zeros(self.numberOfStations)
+        self.gasSideHeatTransferCoefficients = np.zeros(self.numberOfStations)
+        self.coolantSideHeatTransferCoefficients = np.zeros(self.numberOfStations)
+        self.channelAreas = np.zeros(self.numberOfStations)
 
-        self.coolantOutletState = Propellant(self.coolantInletState.name)
-        self.coolantEnthalpyChange = None
-        self.totalHeatPower = None
-
-    def calculate(self, convergenceCriteria=0.01):
+    def calculate(self, inletState: Propellant, massFlowRate, convergenceCriteria=0.01):
 
         print("---")
         print("Starting Heat Transfer Calculation")
         print("Number Of Stations: " + str(self.numberOfStations))
 
-        i = self.numberOfStations - 1
+        self.inletState = inletState
+        self.massFlowRate = massFlowRate
+        self.convergenceCriteria = convergenceCriteria
 
-        # Get values for first station at very end of nozzle
-        self.coolantBulkTemps[i] = self.coolantInletState.T
-        self.coolantPressures[i] = self.coolantInletState.P
-        self.adiabaticWallTemps[i] = self.getLocalAdiabaticWallTempNozzle(self.thrustChamber.exitArea)
+        # Object for the overall outlet state
+        self.outletState = Propellant(self.inletState.name)
 
-        # Propellant objects for calculating the changes in the coolant state as it passes through the channels
-        coolantState = Propellant(self.coolantInletState.name)
-        coolantState.defineState("T", self.coolantInletState.T, "P", self.coolantInletState.P)
-        surfaceCoolantState = Propellant(self.coolantInletState.name)
+        # Get CEA object that we can query
+        cea = self.thrustChamber.getCEAObject()
+        c, ct = self.thrustChamber.convertConditionToCEAFlag(self.thrustChamber.condition, self.thrustChamber.throatCondition)
+        injectionPressure = self.thrustChamber.injectionPressure
+        mixtureRatio = self.thrustChamber.mixtureRatio
+        exitExpansionRatio = self.thrustChamber.expansionRatio
 
-        i -= 1
+        # Get chamber properties
+        chamberTemp = self.thrustChamber.chamberTemp
+        chamberPressure = self.thrustChamber.chamberPressure * 1e5
+        chamberGamma = cea.get_Chamber_MolWt_gamma(Pc=injectionPressure, MR=mixtureRatio, eps=exitExpansionRatio)[1]
+        chamberSpecificHeat = cea.get_HeatCapacities(Pc=injectionPressure, MR=mixtureRatio, eps=exitExpansionRatio, frozen=c, frozenAtThroat=ct)[0]
+        chamberTransport = cea.get_Chamber_Transport(Pc=injectionPressure, MR=mixtureRatio, eps=exitExpansionRatio, frozen=c)
+        chamberViscosity = chamberTransport[1] * 1e-3
+        chamberThermalConductivity = chamberTransport[2] * 100
+        chamberPrandtlNumber = chamberTransport[3]
+        cStar = cea.get_Cstar(Pc=injectionPressure, MR=mixtureRatio)
 
-        # Initialise variables for loop
-        area = 0
-        adiabaticWallTemp = 0
-        localMachNumber = 0
-        gasSideHeatTransferCoefficient = 0
-        gasSideHeatFlux = 0
-        newGasSideWallTemp = convergenceCriteria * 10 # So the convergence criteria isn't met before the loop begins
-        coolantSideWallTemp = 0
-        coolantSideWallTempPrev = coolantState.T
-        coolantVelocity = 0
-        coolantReynoldsNumber = 0
-        coolantPrandtlNumber = 0
-        coolantNusseltNumber = 0
-        coolantSideHeatTransferCoefficient = 0
-        
         totalIterations = 0
 
-        while i > 0:
+        # -1 to account for 0 index
+        station = self.numberOfStations - 1
 
-            iterations = 0
+        # State trackers for the coolant at the inlet and outlet of a station
+        stationInletState = Propellant(self.inletState.name)
+        stationOutletState = Propellant(self.inletState.name)
+        stationInletState.defineState("T", self.inletState.T, "P", self.inletState.P)
+        stationOutletState.defineState("T", self.inletState.T, "P", self.inletState.P)
+        
+        # Iterate through each station from end of nozzle to start of chamber
+        while station > 0:
 
-            # Get the area, adiabatic wall temperature, and gas mach number for the station before the loop,
-            # as these are constant for a station
-            area = radiusToArea(self.thrustChamber.radialCoords[i])
+            loopIterations = 0
 
-            if i > 0:
-                localMachNumber = self.getLocalMachNumberNozzle(area)
-                adiabaticWallTemp = self.getLocalAdiabaticWallTempNozzle(area)
-            elif i < 0:
-                localMachNumber = self.getLocalMachNumberChamber(area)
-                adiabaticWallTemp = self.getLocalAdiabaticWallTempChamber(area)
+            # Get coords of station
+            stationAxialCoord = self.thrustChamber.axialCoords[station]
+            stationRadialCoord = self.thrustChamber.radialCoords[station]
 
-            # Guess an initial value for the gas side wall temp
-            gasSideWallTemp = self.gasSideWallTemps[i-1]
+            # Flag whether we are in the nozzle or chamber
+            if stationAxialCoord >= 0:
+                nozzle = True
+            else:
+                nozzle = False
 
-            while abs(gasSideWallTemp - newGasSideWallTemp) > convergenceCriteria:
-                
-                # Calculate the gas side heat transfer coefficient and heat flux for the guess value
-                gasSideHeatTransferCoefficient = self.bartzEquation(area, gasSideWallTemp, localMachNumber)
-                gasSideHeatFlux = gasSideHeatTransferCoefficient * (adiabaticWallTemp - gasSideWallTemp)
+            # Get thrust chamber dimensions at the station
+            stationRadius = stationRadialCoord
+            stationDiameter = stationRadius * 2
+            stationArea = radiusToArea(stationRadius)
 
-                # Calculate flow properties for the channel at the station
-                self.coolingChannels.channelInstance.getChannelDimensions(area)
-                coolantVelocity = self.massFlowRateToVelocity(self.coolingChannels.massFlowRate, coolantState.D, self.coolingChannels.channelInstance.totalChannelArea)
-                coolantReynoldsNumber = self.reynoldsNumber(coolantState.D, coolantVelocity, self.coolingChannels.channelInstance.hydraulicDiameter, coolantState.viscosity)
-                coolantPrandtlNumber = self.prandtlNumber(coolantState.cp, coolantState.viscosity, coolantState.thermalConductivity)
+            # Get throat dimensions
+            throatRadius = self.thrustChamber.throatRadius
+            throatDiameter = throatRadius * 2
+            throatArea = radiusToArea(throatRadius)
 
-                # Initialise the state of the coolant at the station using the value of the previous station
-                coolantSideWallTemp = coolantSideWallTempPrev
-                surfaceCoolantState.defineState("T", coolantSideWallTemp, "P", coolantState.P)
+            stationExpansionRatio = stationArea / throatArea
 
-                # Reset previous coolant side wall temperature to zero to avoid breaking the loop immediately
-                coolantSideWallTempPrev = 0
+            # Update channel dimensions
+            self.coolingChannels.channelInstance.getChannelDimensions(stationArea)
 
-                # Iterate to find the coolant side wall temperature as the surface viscosity is dependent on the surface temperature
-                while abs(coolantSideWallTemp - coolantSideWallTempPrev) > convergenceCriteria:
+            # Get the gas properties at the station
+            if nozzle:
+                gasGamma = cea.get_exit_MolWt_gamma(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio)[1]
+                gasMachNumber = cea.get_MachNumber(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio, frozen=c, frozenAtThroat=ct)
+                gasTemp = cea.get_Temperatures(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio, frozen=c, frozenAtThroat=ct)[-1]
+                gasSpecificHeat = cea.get_HeatCapacities(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio, frozen=c, frozenAtThroat=ct)[-1]
+                gasTransport = cea.get_Exit_Transport(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio, frozen=c)
+                gasViscosity = gasTransport[1] * 1e-3
+                gasThermalConductivity = gasTransport[2] * 100
+                gasPrandtlNumber = gasTransport[3]
+                gasAdiabaticWallTemp = fd.getAdiabaticWallTemp(gasTemp, gasMachNumber, gasGamma, gasPrandtlNumber)
+            else:
+                gasGamma = cea.get_Chamber_MolWt_gamma(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio)[1]
+                gasMachNumber = fd.getSubsonicMachNumber(stationArea, throatArea, gasGamma, accuracy=convergenceCriteria)
+                gasTemp = fd.getGasTemp(stationArea, gasMachNumber, gasGamma, chamberTemp)
+                gasSpecificHeat = cea.get_HeatCapacities(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio, frozen=c, frozenAtThroat=ct)[0]
+                gasTransport = cea.get_Chamber_Transport(Pc=injectionPressure, MR=mixtureRatio, eps=stationExpansionRatio, frozen=c)
+                gasViscosity = gasTransport[1] * 1e-3
+                gasThermalConductivity = gasTransport[2] * 100
+                gasPrandtlNumber = gasTransport[3]
+                gasAdiabaticWallTemp = fd.getAdiabaticWallTemp(gasTemp, gasMachNumber, gasGamma, gasPrandtlNumber)
 
-                    coolantSideWallTempPrev = coolantSideWallTemp
+            # Set the coolant state to the state of the outlet of the previous station
+            stationInletState.defineState("T", stationOutletState.T, "P", stationOutletState.P)
 
-                    # Calculate heat transfer coefficient for the coolant side
-                    coolantNusseltNumber = self.siederTateEquation(coolantReynoldsNumber, coolantPrandtlNumber, coolantState.viscosity, surfaceCoolantState.viscosity)
-                    coolantSideHeatTransferCoefficient = self.nusseltNumberToHeatTransferCoefficient(coolantNusseltNumber, self.coolingChannels.channelInstance.midWidth, coolantState.thermalConductivity)
+            # Get coolant properties at the station inlet
+            coolantVelocity = fd.massFlowRateToVelocity(self.massFlowRate, stationInletState.D, self.coolingChannels.channelInstance.totalChannelArea)
+            coolantReynoldsNumber = reynoldsNumber(stationInletState.D, coolantVelocity, self.coolingChannels.channelInstance.hydraulicDiameter, stationInletState.viscosity)
+            coolantPrandtlNumber = prandtlNumber(stationInletState.cp, stationInletState.viscosity, stationInletState.thermalConductivity)
 
-                    # Calculate the coolant side wall temperature using the heat flux calculated from the gas side
-                    coolantSideWallTemp = (gasSideHeatFlux / coolantSideHeatTransferCoefficient) + coolantState.T
-                    surfaceCoolantState.defineState("T", coolantSideWallTemp, "P", coolantState.P)
+            # Get friction factor
+            if self.coolingChannels.wallRoughnessHeight > 0:
+                frictionFactor = fd.colebrookEquation(self.coolingChannels.wallRoughnessHeight, self.coolingChannels.channelInstance.hydraulicDiameter, coolantReynoldsNumber, convergenceCriteria=self.convergenceCriteria)
+            elif self.coolingChannels.wallRoughnessHeight == 0:
+                frictionFactor = fd.smoothFrictionFactor(coolantReynoldsNumber)
+            else:
+                exit("Please input a positive channel roughness")
 
-                # Set coolantSideWallTempPrev to the coverged value so that it can be used to initialise the next station
-                # for decreased solve time
-                coolantSideWallTempPrev = coolantSideWallTemp
+            # Initialisation for iteration loop. After the first station, the previous station is used to initialise
+            if totalIterations != 0:
+                gasSideWallTemp = self.gasSideWallTemps[station+1]
+                coolantSideWallTemp = self.coolantSideWallTemps[station+1]
+            else:
+                gasSideWallTemp = gasAdiabaticWallTemp * 0.8
+                coolantSideWallTemp = stationInletState.T
 
-                # Calculate the gas side wall temperature using the gas side heat flux and the coolant side wall temperature
-                newGasSideWallTemp = gasSideHeatFlux * (self.coolingChannels.wallThickness / self.coolingChannels.wallConductivity) + coolantSideWallTemp
+            # Change the new temps so that the loop doesn't break
+            newGasSideWallTemp = gasSideWallTemp + 10
+            newCoolantSideWallTemp = coolantSideWallTemp + 10
 
-                # Set the gas side wall temperature guess value to the average of the previous guess value, and the calculated value above
-                gasSideWallTemp = (gasSideWallTemp + newGasSideWallTemp) / 2
+            while abs(abs(gasSideWallTemp) - abs(newGasSideWallTemp)) > self.convergenceCriteria and abs(abs(coolantSideWallTemp) - abs(newCoolantSideWallTemp)) > self.convergenceCriteria:
 
-                iterations += 1
+                gasSideWallTemp = newGasSideWallTemp
+                coolantSideWallTemp = newCoolantSideWallTemp
 
-            stationLength = distanceBetweenTwoPoints([self.thrustChamber.axialCoords[i], self.thrustChamber.radialCoords[i]],
-                                                    [self.thrustChamber.axialCoords[i+1], self.thrustChamber.radialCoords[i+1]])
+                gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, gasViscosity, gasSpecificHeat, gasPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=0.0026)
 
-            frictionFactor = self.colebrookEquation(self.coolingChannels.wallRoughnessHeight, self.coolingChannels.channelInstance.hydraulicDiameter, coolantReynoldsNumber, convergenceCriteria=convergenceCriteria)
-            pressureLoss = self.pressureLoss(frictionFactor, stationLength, self.coolingChannels.channelInstance.hydraulicDiameter, coolantState.D, coolantVelocity)
+                # Get nusselt number using chosen correlation
+                if self.coolantSideHeatTransferCorrelation.lower() == "dittus-boelter" or self.coolantSideHeatTransferCorrelation.lower() == "dittus boelter":
 
-            print("Solved station " + str(i) + " in " + str(iterations) + " iterations")
-                
-            self.heatFluxes[i] = gasSideHeatFlux
-            self.adiabaticWallTemps[i] = adiabaticWallTemp
-            self.gasSideWallTemps[i] = gasSideWallTemp
-            self.coolantSideWallTemps[i] = coolantSideWallTemp
-            self.coolantBulkTemps[i] = coolantState.T
-            self.coolantPressures[i] = coolantState.P
+                    coolantNusseltNumber = ht.dittusBoelterEquation(coolantReynoldsNumber, coolantPrandtlNumber)
+                    
+                else:
+                    exit("Please choose a valid heat transfer correlation for the coolant")
 
-            newCoolantBulkTemp = coolantState.T + ((gasSideHeatFlux * 2 * pi * self.thrustChamber.radialCoords[i] * stationLength) / (self.coolingChannels.massFlowRate * coolantState.cp))
-            newCoolantPressure = coolantState.P - pressureLoss
+                # Apply curvature correction if included
+                if self.includeCurvatureCorrection:
+                    # This will fail on the first station as there is no point before it, so 1 is returned in that case
+                    try:
+                        curvatureCorrectionFactor = ht.curvatureCorrectionFactor(self.thrustChamber.axialCoords[station+1], stationAxialCoord, self.thrustChamber.axialCoords[station-1], coolantReynoldsNumber, self.coolingChannels.channelInstance.hydraulicDiameter)
+                    except:
+                        curvatureCorrectionFactor = 1
 
-            coolantState.defineState("T", newCoolantBulkTemp, "P", newCoolantPressure)
+                    coolantNusseltNumber = coolantNusseltNumber * curvatureCorrectionFactor
 
-            totalIterations += iterations
+                # Apply roughness correction if included
+                if self.includeRoughnessCorrection:
 
-            i -= 1
+                    roughnessCorrectionFactor = ht.roughnessCorrectionFactor(frictionFactor, coolantReynoldsNumber, coolantPrandtlNumber)
+                    coolantNusseltNumber = coolantNusseltNumber * roughnessCorrectionFactor
 
-        self.coolantOutletState.defineState("T", self.coolantBulkTemps[1], "P", self.coolantPressures[1])
-        self.coolantEnthalpyChange = self.coolantOutletState.H - self.coolantInletState.H
-        self.totalHeatPower = self.coolingChannels.massFlowRate * self.coolantEnthalpyChange
+                # Calculate the coolant side heat transfer coefficient
+                coolantSideHeatTransferCoefficient = ht.nusseltNumberToHeatTransferCoefficient(coolantNusseltNumber, self.coolingChannels.channelInstance.hydraulicDiameter, stationInletState.thermalConductivity)
+
+                # Apply fin correction if included
+                if self.includeFinCorrection:
+
+                    finEffectiveness = ht.finEffectiveness(coolantSideHeatTransferCoefficient, self.coolingChannels.midRibThickness, self.coolingChannels.wallConductivity, self.coolingChannels.channelHeight)
+                    coolantSideHeatTransferCoefficient = ht.applyFinEffectiveness(coolantSideHeatTransferCoefficient, finEffectiveness, self.coolingChannels.channelInstance.midWidth, self.coolingChannels.channelHeight, self.coolingChannels.midRibThickness)
+
+                heatFlux = (gasAdiabaticWallTemp - stationInletState.T) / ((1 / gasSideHeatTransferCoefficient) + (self.coolingChannels.wallThickness / self.coolingChannels.wallConductivity) + (1 / coolantSideHeatTransferCoefficient))
+
+                newGasSideWallTemp = gasAdiabaticWallTemp - (heatFlux / gasSideHeatTransferCoefficient)
+                newCoolantSideWallTemp = stationInletState.T + (heatFlux / coolantSideHeatTransferCoefficient)
+
+                loopIterations += 1
+
+            gasSideWallTemp = newGasSideWallTemp
+            coolantSideWallTemp = newCoolantSideWallTemp
+
+            # Calculate length of the station
+            stationLength = distanceBetweenTwoPoints([stationAxialCoord, stationRadialCoord], [self.thrustChamber.axialCoords[station-1], self.thrustChamber.radialCoords[station-1]])
+
+            # Calculate temperature change over the station
+            stationHeatTransferArea = 2 * pi * stationRadius * stationLength
+            stationTempChange = (heatFlux * stationHeatTransferArea) / (massFlowRate * stationInletState.cp)
+
+            # Calculate pressure loss over the station
+            stationPressureLoss = fd.pressureLoss(frictionFactor, stationLength, self.coolingChannels.channelInstance.hydraulicDiameter, stationInletState.D, coolantVelocity)
+
+            # Calculate the state of the station outlet
+            stationOutletState.defineState("T", stationInletState.T + stationTempChange ,"P", stationInletState.P - stationPressureLoss)
+
+            # Add station variables to lists
+            self.heatFluxes[station] = heatFlux
+            self.adiabaticWallTemps[station] = gasAdiabaticWallTemp
+            self.gasSideWallTemps[station] = gasSideWallTemp
+            self.coolantSideWallTemps[station] = coolantSideWallTemp
+            self.coolantBulkTemps[station] = stationOutletState.T
+            self.coolantPressures[station] = stationOutletState.P
+            self.coolantReynoldsNumbers[station] = coolantReynoldsNumber
+            self.coolantNusseltNumbers[station] = coolantNusseltNumber
+            self.coolantPrandtlNumbers[station] = coolantPrandtlNumber
+            self.gasSideHeatTransferCoefficients[station] = gasSideHeatTransferCoefficient
+            self.coolantSideHeatTransferCoefficients[station] = coolantSideHeatTransferCoefficient
+            self.channelAreas[station] = self.coolingChannels.channelInstance.individualChannelArea
+
+            print("---")
+            print("Solved station " + str(station) + " in " + str(loopIterations) + " iterations")
+            print("---")
+            print("Coolant Pressure: " + str(stationOutletState.P/1e5))
+            print("Coolant Density: " + str(stationOutletState.D))
+            print("Coolant Velocity: " + str(coolantVelocity))
+            print("Adiabatic Wall Temp: " + str(gasAdiabaticWallTemp))
+            print("Gas Side Wall Temp: " + str(gasSideWallTemp))
+            print("Coolant Side Wall Temp: " + str(coolantSideWallTemp))
+            print("Coolant Temp: " + str(stationOutletState.T))
+            print("Gas Side H: " + str(gasSideHeatTransferCoefficient))
+            print("Coolant Side H: " + str(coolantSideHeatTransferCoefficient))
+            print("Heat Flux: "+ str(heatFlux/1e6))
+            if self.includeCurvatureCorrection:
+                print("Curvature Correction: " + str(curvatureCorrectionFactor))
+            if self.includeRoughnessCorrection:
+                print("Roughness Correction: " + str(roughnessCorrectionFactor))
+            if self.includeFinCorrection:
+                print("Fin Effectiveness: " + str(finEffectiveness))
+            
+            station -= 1
+            totalIterations += loopIterations
+
+        self.outletState.defineState("T", stationOutletState.T, "P", stationOutletState.P)
+        self.enthalpyChange = self.outletState.H - self.inletState.H
+        self.totalHeatPower = self.massFlowRate * self.enthalpyChange
 
         print("---")
-        print("\nHeat transfer calculaton complete")
+        print("Heat transfer calculaton complete")
         print("Total iterations: " + str(totalIterations))
         print("---")
-        print("Coolant Enthalpy Change: " + str(self.coolantEnthalpyChange))
+        print("Coolant Outlet Temperature: " + str(self.outletState.T))
+        print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
-        print("Total Pressure Loss: " + str(self.coolantOutletState.P - self.coolantInletState.P) + " Pa")
-        print("---")
-
-    def bartzEquation(self, localArea, gasSideWallTemp, localMachNumber):
-
-        firstBracket = (0.026 / self.thrustChamber.throatDiameter)
-        secondBracket = (((self.thrustChamber.chamberViscosity ** 0.2) * self.thrustChamber.chamberHeatCapacity) / (self.thrustChamber.chamberPrandtlNumber ** 0.6))
-        thirdBracket = ((self.thrustChamber.chamberPressureSI * G) / self.thrustChamber.cStar) ** 0.8
-        fourthBracket = (self.thrustChamber.throatDiameter / self.thrustChamber.throatAverageRadiusOfCurvature) ** 0.1
-        fifthBracket = (self.thrustChamber.throatArea / localArea) ** 0.9
-        sigma = self.bartzCorrectionFactor(gasSideWallTemp, localMachNumber)
-
-        return firstBracket * secondBracket * thirdBracket * fourthBracket * fifthBracket * sigma
-
-    def bartzCorrectionFactor(self, gasSideWallTemp, localMachNumber):
-
-        denominatorFirstBracket = ((0.5 * (gasSideWallTemp / self.thrustChamber.chamberTemp) * (1 + ((self.thrustChamber.chamberGamma - 1) / 2) * (localMachNumber ** 2)) + 0.5) ** 0.68)
-        denominatorSecondBracket = (1 + ((self.thrustChamber.chamberGamma - 1) / 2) * (localMachNumber ** 2)) ** 0.12
-
-        return 1 / (denominatorFirstBracket * denominatorSecondBracket)
-
-    def colebrookEquation(self, channelRoughness, hydraulicDiameter, reynoldsNumber, convergenceCriteria=0.01):
-
-        x = -2 * log10(channelRoughness / (3.7 * hydraulicDiameter))
-        xPrev = x + 10
-
-        while abs(abs(x) - abs(xPrev)) > convergenceCriteria:
-
-            xPrev = x
-            x = -2 * log10((channelRoughness / (3.7 * hydraulicDiameter)) + ((2.51 * xPrev) / reynoldsNumber))
-
-        frictionFactor = (1 / x) ** 2
-
-        return frictionFactor
-        
-    def pressureLoss(self, frictionFactor, length, hydraulicDiameter, density, velocity):
-
-        return frictionFactor * (length / hydraulicDiameter) * 0.5 * density * (velocity ** 2)
-    
-    def reynoldsNumber(self, density, velocity, characteristicLength, visocity):
-
-        return (density * velocity * characteristicLength) / visocity
-
-    def prandtlNumber(self, specificHeat, viscosity, thermalConductivity):
-
-        return (specificHeat * viscosity) / thermalConductivity
-
-    def massFlowRateToVelocity(self, massFlowRate, density, area):
-
-        return massFlowRate / (density * area)
-
-    def siederTateEquation(self, reynoldsNumber, prandtlNumber, bulkViscosity, surfaceViscosity, C1=0.023):
-
-        return C1 * (reynoldsNumber ** (4/5)) * (prandtlNumber ** (1/3)) * ((bulkViscosity / surfaceViscosity) ** 0.14)
-
-    def nusseltNumberToHeatTransferCoefficient(self, nusseltNumber, charactersiticLength, thermalConductivity):
-
-        return (nusseltNumber * thermalConductivity) / charactersiticLength
-
-    def getLocalMachNumberNozzle(self, area):
-
-        CEA = self.thrustChamber.getCEAObject()
-
-        expansionRatioAtArea = area / self.thrustChamber.throatArea
-
-        c, ct = self.thrustChamber.convertConditionToCEAFlag(self.thrustChamber.condition, self.thrustChamber.throatCondition)
-
-        return CEA.get_MachNumber(Pc=self.thrustChamber.injectionPressure, MR=self.thrustChamber.mixtureRatio, eps=expansionRatioAtArea, frozen=c, frozenAtThroat=ct)
-
-    # Gets local mach number upstream of the throat as it is not possible to use CEA to get this
-    # Uses the Newton-Raphson method to iteratively solve for mach number from area ratio to the specified accuracy
-    # Method detailed here: https://www.grc.nasa.gov/www/winddocs/utilities/b4wind_guide/mach.html
-    def getLocalMachNumberChamber(self, area, accuracy=0.001):
-
-        gamma = self.thrustChamber.chamberGamma
-
-        R = (area / self.thrustChamber.throatArea) ** 2
-        E = (gamma + 1) / (gamma - 1)
-        P = 2 / (gamma + 1)
-        Q = 1 / E
-
-        a = P ** (1/Q)
-        r = (R - 1) / (2 * a)
-
-        X = 1 / (1 + r + sqrt(r * (r + 2)))
-
-        def newtonRaphson(X, P, Q):
-
-            return (P * (X - 1)) / (1 - R * (P + Q * X) ** (-P / Q))
-
-        Xnew = newtonRaphson(X, P, Q)
-
-        while abs(Xnew - X) > accuracy:
-
-            X = Xnew
-            Xnew = newtonRaphson(X, P, Q)
-
-        subsonicMachNumber = sqrt(Xnew)
-
-        return subsonicMachNumber
-
-    def getLocalGasTempNozzle(self, area):
-
-        CEA = self.thrustChamber.getCEAObject()
-
-        expansionRatioAtArea = area / self.thrustChamber.throatArea
-
-        c, tc = self.thrustChamber.convertConditionToCEAFlag(self.thrustChamber.condition, self.thrustChamber.throatCondition)
-
-        return CEA.get_Temperatures(Pc=self.thrustChamber.injectionPressure, MR=self.thrustChamber.mixtureRatio, eps=expansionRatioAtArea, frozen=c, frozenAtThroat=tc)[-1]
-
-    def getLocalGasTempChamber(self, area):
-
-        mach = self.getLocalMachNumberChamber(area)
-        gamma = self.getLocalGamma(area)
-
-        return self.thrustChamber.chamberTemp / (1 + ((gamma - 1) / 2) * (mach ** 2))
-
-    def getLocalRecoveryFactor(self, area):
-
-        expansionRatioAtArea = area / self.thrustChamber.throatArea
-
-        prandtlNumber = self.thrustChamber.getExitTransportPropertiesAtExpansionRatio(expansionRatioAtArea)[3]
-
-        return prandtlNumber ** 0.33
-
-    def getLocalGamma(self, area):
-
-        CEA = self.thrustChamber.getCEAObject()
-
-        expansionRatioAtArea = area / self.thrustChamber.throatArea
-
-        return CEA.get_exit_MolWt_gamma(Pc=self.thrustChamber.chamberPressure, MR=self.thrustChamber.mixtureRatio, eps=expansionRatioAtArea)[1]
-
-    def getLocalAdiabaticWallTempNozzle(self, area):
-
-        mach = self.getLocalMachNumberNozzle(area)
-        r = self.getLocalRecoveryFactor(area)
-        gamma = self.getLocalGamma(area)
-        gasTemp = self.getLocalGasTempNozzle(area)
-
-        numerator = 1 + (r * ((gamma-1) / 2) * (mach ** 2))
-        denominator = 1 + ((gamma-1) / 2) * (mach ** 2)
-
-        return gasTemp * (numerator / denominator)
-
-    def getLocalAdiabaticWallTempChamber(self, area):
-
-        mach = self.getLocalMachNumberChamber(area)
-        r = self.thrustChamber.chamberPrandtlNumber ** 0.33
-        gamma = self.thrustChamber.chamberGamma
-        gasTemp = self.getLocalGasTempChamber(area)
-
-        numerator = 1 + (r * ((gamma-1) / 2) * (mach ** 2))
-        denominator = 1 + ((gamma-1) / 2) * (mach ** 2)
-
-        return gasTemp * (numerator / denominator)
-
+        print("Total Pressure Loss: " + str(self.outletState.P - self.inletState.P) + " Pa")

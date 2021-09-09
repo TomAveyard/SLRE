@@ -1,33 +1,49 @@
+from sys import exit
+from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 
-# Calculates state of propellant at a pump outlet from an inlet state, target outlet pressure, and isentropic efficiency
-class Pump(Propellant):
+class Pump(Component):
 
-    def __init__(self, propellant, inletState, outletPressure, isentropicEfficiency):
+    def __init__(self, isentropicEfficiency, pressureRise=None, outletPressure=None):
 
-        # Initialises super class
-        super().__init__(propellant)
-
+        super().__init__() # Contains self.inletState, self.outletState, self.type
         self.isentropicEfficiency = isentropicEfficiency
+        self.type = "pump"
+
+        if pressureRise == None and outletPressure == None:
+            exit("Please specify either a pressure rise or an outlet pressure for the pump")
+        elif pressureRise != None and outletPressure != None:
+            exit("Please specify either a pressure rise or an outlet pressure for the pump, not both")
+
+        self.pressureRise = pressureRise
+        self.outletPressure = outletPressure
+
+        self.massFlowRate = None
+        self.deltaHIsentropic = None
+        self.deltaHReal = None
+        self.massFlowRate = None
+        self.power = None
+
+    def calculate(self, inletState: Propellant, massFlowRate):
+
+        self.inletState = inletState
+
+        if self.pressureRise != None:
+            self.outletPressure = self.inletState.P + self.pressureRise
 
         # Defines the isentropic outlet state
-        self.defineState("S", inletState.S, "P", outletPressure)
+        outletStateIsentropic = Propellant(self.inletState.name)
+        outletStateIsentropic.defineState("S", self.inletState.S, "P", self.outletPressure)
 
         # Calculates the isentropic enthalpy change
-        self.deltaHIsentropic = inletState.H - self.H
+        self.deltaHIsentropic = self.inletState.H - outletStateIsentropic.H
 
         # Calculates the real enthalpy change
         self.deltaHReal = self.deltaHIsentropic / self.isentropicEfficiency
 
         # Defines real state at the outlet
-        self.defineState("H", inletState.H - self.deltaHReal, "P", outletPressure)
-
-        # Initialise variables that will be defined using other functions
-        self.massFlowRate = None
-        self.power = None
-
-    # Calculates the power required by the pump for a given mass flow rate
-    def calculatePower(self, massFlowRate):
+        self.outletState = Propellant(self.inletState.name)
+        self.outletState.defineState("H", inletState.H - self.deltaHReal, "P", self.outletPressure)
 
         self.massFlowRate = massFlowRate
-        self.power = self.deltaHReal * massFlowRate
+        self.power = self.deltaHReal * self.massFlowRate

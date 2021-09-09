@@ -142,12 +142,12 @@ class ThrustChamber:
         self.chamberGamma = chamberMolWtGamma[1]
         
         chamberTransport = self.CEA.get_Chamber_Transport(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c)
-        self.chamberHeatCapacity = chamberTransport[0] / 1000
+        self.chamberHeatCapacity = chamberTransport[0]
         self.chamberViscosity = chamberTransport[1] * 0.001
         self.chamberThermalConductivity = chamberTransport[2] * 100
         self.chamberPrandtlNumber = chamberTransport[3]
         exitTransport = self.CEA.get_Exit_Transport(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c)
-        self.exitHeatCapacity = exitTransport[0] / 1000
+        self.exitHeatCapacity = exitTransport[0]
         self.exitViscosity = exitTransport[1] * 0.001
         self.exitThermalConductivity = exitTransport[2] * 100
         self.exitPrandtlNumber = exitTransport[3]
@@ -257,8 +257,10 @@ class ThrustChamber:
     def getThrustChamberCoords(self):
 
         self.throatAverageRadiusOfCurvature = (self.nozzle.throatRadiusOfCurvature + self.combustionChamber.entranceRadiusOfCurvature) / 2
-        self.axialCoords = np.concatenate((self.combustionChamber.axialCoords, self.nozzle.axialCoords))
-        self.radialCoords = np.concatenate((self.combustionChamber.radialCoords, self.nozzle.radialCoords))
+
+        # First nozzle coord is omitted to avoid duplicting throat coord
+        self.axialCoords = np.concatenate((self.combustionChamber.axialCoords[:-2], self.nozzle.axialCoords))
+        self.radialCoords = np.concatenate((self.combustionChamber.radialCoords[:-2], self.nozzle.radialCoords))
         
         self.getSurfaceArea()
 

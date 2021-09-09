@@ -148,3 +148,28 @@ def distanceBetweenTwoPoints(point1, point2):
 def getRelativeDistanceBetweenNumbers(num1, num2, numx):
 
     return (numx - num1) / (num2 - num1)
+
+# Method of finding the radius of curvature from 3 points
+# Detailed at http://paulbourke.net/geometry/circlesphere/
+def radiusOfCurvature3Points2D(point1, point2, point3, returnCenterPoint=False):
+
+    try:
+        ma = (point2[1] - point1[1]) / (point2[0] - point1[0])
+        mb = (point3[1] - point2[1]) / (point3[0] - point2[0])
+
+        if (mb - ma) < 1e-12:
+            return None, None
+
+        centrex = (ma * mb * (point1[1] - point3[1]) + mb * (point1[0] + point2[0]) - ma * (point2[0] + point3[0])) / (2 * (mb - ma))
+        centrey = - (1 / ma) * (centrex - ((point1[0] + point2[0]) / 2)) + ((point1[1] + point2[1]) / 2)
+
+        radius = distanceBetweenTwoPoints([centrex, centrey], point2)
+
+        if returnCenterPoint:
+            return radius, [centrex, centrey]
+        else:
+            return radius
+
+    except:
+        return None, None
+
