@@ -1,12 +1,13 @@
 from PropTools.Utils.constants import G
 from PropTools.Utils.mathsUtils import radiusOfCurvature3Points2D
+from PropTools.Thermo.fluidDynamics import smoothFrictionFactor
 from math import pi, tanh, sqrt
 
 # Gas Side Correlations
 
-def bartzEquation(throatDiameter, viscosity, specificHeat, prandtlNumber, chamberPressure, chamberTemp, cStar, localArea, gasSideWallTemp, machNumber, gamma, throatAverageRadiusOfCurvature=None):
+def bartzEquation(throatDiameter, viscosity, specificHeat, prandtlNumber, chamberPressure, chamberTemp, cStar, localArea, gasSideWallTemp, machNumber, gamma, throatAverageRadiusOfCurvature=None, C1=0.026):
 
-        firstBracket = 0.026 / (throatDiameter ** 0.2)
+        firstBracket = C1 / (throatDiameter ** 0.2)
         secondBracket = (((viscosity ** 0.2) * specificHeat) / (prandtlNumber ** 0.6))
         thirdBracket = ((chamberPressure) / cStar) ** 0.8
 
@@ -89,19 +90,9 @@ def curvatureCorrectionFactor(p1, p2, p3, reynoldsNumber, hydraulicDiameter):
 
 # Roughness correction
 
-def smoothFrictionFactor(reynoldsNumber):
+def roughnessCorrectionFactor(frictionFactor, reynoldsNumber, prandtlNumber):
 
-    if reynoldsNumber >= 10 ** 4:
-
-        return 0.0014 + (0.125 / (reynoldsNumber ** 0.32))
-
-    elif reynoldsNumber < 10 ** 4:
-
-        return 0.0791 / (reynoldsNumber ** 0.25)
-
-def roughnessCorrectionFactor(reynoldsNumber, prandtlNumber):
-
-    roughSmoothRatio = smoothFrictionFactor(reynoldsNumber)
+    roughSmoothRatio = frictionFactor / smoothFrictionFactor(reynoldsNumber)
 
     numerator = 1 + 1.5 * (prandtlNumber ** (-1/6)) * (reynoldsNumber ** (-1/8)) * (prandtlNumber - 1)
     denominator = 1 + 1.5 * (prandtlNumber ** (-1/6)) * (reynoldsNumber ** (-1/8)) * ((prandtlNumber * roughSmoothRatio) - 1)

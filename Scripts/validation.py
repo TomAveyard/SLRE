@@ -11,21 +11,19 @@ from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-plot = "heat flux"
+plot = "gas side wall temps"
 
-includeCorrections = True
+testThrustChamber = ThrustChamber('methane', 'oxygen', 20.5*10**3, 56, mixtureRatioOverride=3.5, fac=True, CR=7.5, ambientPressure=0.7)
 
-testThrustChamber = ThrustChamber('methane', 'oxygen', 7.7*10**3, 40, mixtureRatioOverride=3.16, fac=True, CR=15, ambientPressure=0.3)
-
-testThrustChamber.getChamberGeometry(2.75,
+testThrustChamber.getChamberGeometry(2.25,
                                      0.065, 
                                      entranceRadiusOfCurvatureFactor=0.75, 
                                      throatEntranceStartAngle=-135, 
-                                     numberOfPointsConverging=50,
-                                     numberOfPointsStraight=20)
+                                     numberOfPointsConverging=100,
+                                     numberOfPointsStraight=50)
 
 #testThrustChamber.getRaoBellNozzleGeometry(0.8, numberOfPoints=100)
-testThrustChamber.getConicalNozzleGeometry(numberOfPoints=100, divergenceHalfAngle=30)
+testThrustChamber.getConicalNozzleGeometry(numberOfPoints=300, divergenceHalfAngle=20)
 testThrustChamber.getThrustChamberCoords()
 
 if plot == "thrust chamber":
@@ -41,9 +39,9 @@ ox = Propellant(testThrustChamber.ox.name)
 fuel.defineState("T", 108, "P", 3*10**5)
 
 testFuelTank = Tank(fuel)
-testFuelPump = Pump(0.7, outletPressure=60e5)
-testCoolingChannels = CoolingChannels(72, 1e-3, 1e-3, 1e-3, 365, 6e-6)
-testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, coolantSideHeatTransferCorrelation="dittus-boelter", includeCurvatureCorrection=True, includeFinCorrection=True, includeRoughnessCorrection=True)
+testFuelPump = Pump(0.7, outletPressure=150e5)
+testCoolingChannels = CoolingChannels(96, 0.9e-3, 1.5e-3, 1.25e-3, 365, 0)
+testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, coolantSideHeatTransferCorrelation="dittus-boelter", includeCurvatureCorrection=False, includeFinCorrection=True, includeRoughnessCorrection=True)
 testTurbine = Turbine(0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
 
 testFuelLine = Line(testFuelTank.outletState, testThrustChamber.fuelMassFlowRate, [testFuelPump, testRegenerativeCooling, testTurbine], convergenceCriteria=0.1)

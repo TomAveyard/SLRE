@@ -51,6 +51,16 @@ def getAdiabaticWallTemp(gasTemp, mach, gamma, prandtlNumber):
 
 # Pipe flow
 
+def smoothFrictionFactor(reynoldsNumber):
+
+    if reynoldsNumber >= 10 ** 4:
+
+        return 0.0014 + (0.125 / (reynoldsNumber ** 0.32))
+
+    else:
+
+        return 0.0791 / (reynoldsNumber ** 0.25)
+
 def pressureLoss(frictionFactor, length, hydraulicDiameter, density, velocity):
 
     return frictionFactor * (length / hydraulicDiameter) * 0.5 * density * (velocity ** 2)
@@ -69,4 +79,3 @@ def colebrookEquation(channelRoughness, hydraulicDiameter, reynoldsNumber, conve
     frictionFactor = (1 / x) ** 2
 
     return frictionFactor
-
