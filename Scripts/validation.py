@@ -1,6 +1,6 @@
 from sys import exit
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
-from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling
+from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling, SolverParameters
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling, CoolingChannels
 from PropTools.SubSystems.Engine.Tank.tank import Tank
@@ -38,13 +38,15 @@ ox = Propellant(testThrustChamber.ox.name)
 
 fuel.defineState("T", 108, "P", 3*10**5)
 
+solverParameters = SolverParameters(bartzEquationCoefficient=0.023*0.33, coolantSideHeatTransferCorrelation="sieder-tate", includeRoughnessCorrection=False)
+
 testFuelTank = Tank(fuel)
 testFuelPump = Pump(0.7, outletPressure=150e5)
 testCoolingChannels = CoolingChannels(96, 0.9e-3, 1.5e-3, 1.25e-3, 365, 0)
-testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, coolantSideHeatTransferCorrelation="ruan-meng", includeCurvatureCorrection=False, includeFinCorrection=True, includeRoughnessCorrection=True)
+testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, solverParameters)
 testTurbine = Turbine(0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
 
-testFuelLine = Line(testFuelTank.outletState, testThrustChamber.fuelMassFlowRate, [testFuelPump, testRegenerativeCooling, testTurbine], convergenceCriteria=0.1)
+testFuelLine = Line(testFuelTank.outletState, testThrustChamber.fuelMassFlowRate, [testFuelPump, testRegenerativeCooling, testTurbine])
 
 if plot == "heat flux":
     fig, ax = plt.subplots()

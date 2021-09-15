@@ -9,12 +9,11 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 
 class Line:
 
-    def __init__(self, inletState: Propellant, massFlowRate: float, components: "list[Component]", convergenceCriteria=0.1):
+    def __init__(self, inletState: Propellant, massFlowRate: float, components: "list[Component]"):
 
         self.inletState = inletState
         self.massFlowRate = massFlowRate
         self.components = components
-        self.convergenceCriteria = convergenceCriteria
 
         self.stateTracker = deepcopy(self.inletState)
         self.states = [deepcopy(self.stateTracker)]
@@ -31,7 +30,7 @@ class Line:
 
             elif type(i) is RegenerativeCooling:
 
-                i.calculate(self.stateTracker, self.massFlowRate, convergenceCriteria=self.convergenceCriteria)
+                i.calculate(self.stateTracker, self.massFlowRate)
 
 
             self.stateTracker = deepcopy(i.outletState)
