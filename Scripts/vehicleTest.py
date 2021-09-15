@@ -42,7 +42,7 @@ rocket.wetMass = rocket.dryMass + rocket.propellantMass
 
 flight = Flight(rocket)
 
-#flight.flightSimulation()
+flight.flightSimulation()
 #flight.plotGraph(variablesToPlot=["Altitude", "Acceleration"])
 
 #print("Apogee: " + str(flight.apogee))
@@ -53,4 +53,6 @@ flight = Flight(rocket)
 #print("Total Tank Height: " + str(tankHeight))
 #print("Delta V: " + str(flight.totalDragDeltaV))
 
-print(str(oxygenVolumeRequired/ethanolVolumeRequired))
+print(flight.apogee)
+print(ethanolMassRequired)
+print(oxygenMassRequired)

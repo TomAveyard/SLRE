@@ -5,13 +5,13 @@ from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChambe
 from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling, CoolingChannels
 from PropTools.SubSystems.Engine.Tank.tank import Tank
 from PropTools.SubSystems.Engine.Turbopump.pump import Pump
-from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine
+from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine 
 from PropTools.SubSystems.Engine.Cycle.cycle import Cycle, Line
 from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-plot = "gas side wall temps"
+plot = "heat flux"
 
 testThrustChamber = ThrustChamber('methane', 'oxygen', 20.5*10**3, 56, mixtureRatioOverride=3.5, fac=True, CR=7.5, ambientPressure=0.7)
 
@@ -41,7 +41,7 @@ fuel.defineState("T", 108, "P", 3*10**5)
 testFuelTank = Tank(fuel)
 testFuelPump = Pump(0.7, outletPressure=150e5)
 testCoolingChannels = CoolingChannels(96, 0.9e-3, 1.5e-3, 1.25e-3, 365, 0)
-testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, coolantSideHeatTransferCorrelation="dittus-boelter", includeCurvatureCorrection=False, includeFinCorrection=True, includeRoughnessCorrection=True)
+testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, coolantSideHeatTransferCorrelation="ruan-meng", includeCurvatureCorrection=False, includeFinCorrection=True, includeRoughnessCorrection=True)
 testTurbine = Turbine(0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
 
 testFuelLine = Line(testFuelTank.outletState, testThrustChamber.fuelMassFlowRate, [testFuelPump, testRegenerativeCooling, testTurbine], convergenceCriteria=0.1)

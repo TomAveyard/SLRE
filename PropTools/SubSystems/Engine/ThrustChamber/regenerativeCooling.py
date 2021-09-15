@@ -154,11 +154,15 @@ class RegenerativeCooling(Component):
         # -1 to account for 0 index
         station = self.numberOfStations - 1
 
-        # State trackers for the coolant at the inlet and outlet of a station
+        # State trackers for the coolant at the inlet, outlet, and surface of a station
         stationInletState = Propellant(self.inletState.name)
         stationOutletState = Propellant(self.inletState.name)
+        stationSurfaceState = Propellant(self.inletState.name)
         stationInletState.defineState("T", self.inletState.T, "P", self.inletState.P)
         stationOutletState.defineState("T", self.inletState.T, "P", self.inletState.P)
+
+        # Counter for total distance coolant has travelled, required for some heat transfer correlations
+        distance = 0
         
         # Iterate through each station from end of nozzle to start of chamber
         while station > 0:
@@ -245,12 +249,26 @@ class RegenerativeCooling(Component):
                 gasSideWallTemp = newGasSideWallTemp
                 coolantSideWallTemp = newCoolantSideWallTemp
 
-                gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, gasViscosity, gasSpecificHeat, gasPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=0.0026)
+                gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, gasViscosity, gasSpecificHeat, gasPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=0.026*0.33)
+
+                stationSurfaceState.defineState("T", coolantSideWallTemp, "P", stationOutletState.P)
 
                 # Get nusselt number using chosen correlation
                 if self.coolantSideHeatTransferCorrelation.lower() == "dittus-boelter" or self.coolantSideHeatTransferCorrelation.lower() == "dittus boelter":
 
                     coolantNusseltNumber = ht.dittusBoelterEquation(coolantReynoldsNumber, coolantPrandtlNumber)
+
+                elif self.coolantSideHeatTransferCorrelation.lower() == "sieder-tate" or self.coolantSideHeatTransferCorrelation.lower() == "sieder tate":
+
+                    coolantNusseltNumber = ht.siederTateEquation(coolantReynoldsNumber, coolantPrandtlNumber, stationInletState.viscosity, stationSurfaceState.viscosity)
+
+                elif self.coolantSideHeatTransferCorrelation.lower() == "taylor":
+
+                    coolantNusseltNumber = ht.taylorEquation(coolantReynoldsNumber, coolantPrandtlNumber, stationInletState.T, stationSurfaceState.T, self.coolingChannels.channelInstance.hydraulicDiameter, distance)
+
+                elif self.coolantSideHeatTransferCorrelation.lower() == "ruan-meng" or self.coolantSideHeatTransferCorrelation.lower() == "ruan meng":
+
+                    coolantNusseltNumber = ht.ruanMengEquation(coolantReynoldsNumber, coolantPrandtlNumber, stationInletState.D, stationSurfaceState.D, self.coolingChannels.channelInstance.hydraulicDiameter, distance)
                     
                 else:
                     exit("Please choose a valid heat transfer correlation for the coolant")
@@ -292,6 +310,7 @@ class RegenerativeCooling(Component):
 
             # Calculate length of the station
             stationLength = distanceBetweenTwoPoints([stationAxialCoord, stationRadialCoord], [self.thrustChamber.axialCoords[station-1], self.thrustChamber.radialCoords[station-1]])
+            distance += stationLength
 
             # Calculate temperature change over the station
             stationHeatTransferArea = 2 * pi * stationRadius * stationLength
