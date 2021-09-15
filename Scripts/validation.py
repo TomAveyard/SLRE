@@ -5,13 +5,13 @@ from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChambe
 from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling, CoolingChannels
 from PropTools.SubSystems.Engine.Tank.tank import Tank
 from PropTools.SubSystems.Engine.Turbopump.pump import Pump
-from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine
+from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine 
 from PropTools.SubSystems.Engine.Cycle.cycle import Cycle, Line
 from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-plot = "gas side wall temps"
+plot = "coolant temps"
 
 testThrustChamber = ThrustChamber('methane', 'oxygen', 20.5*10**3, 56, mixtureRatioOverride=3.5, fac=True, CR=7.5, ambientPressure=0.7)
 

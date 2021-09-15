@@ -245,7 +245,7 @@ class RegenerativeCooling(Component):
                 gasSideWallTemp = newGasSideWallTemp
                 coolantSideWallTemp = newCoolantSideWallTemp
 
-                gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, gasViscosity, gasSpecificHeat, gasPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=0.0026)
+                gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, gasViscosity, gasSpecificHeat, gasPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=0.026*0.33)
 
                 # Get nusselt number using chosen correlation
                 if self.coolantSideHeatTransferCorrelation.lower() == "dittus-boelter" or self.coolantSideHeatTransferCorrelation.lower() == "dittus boelter":
