@@ -59,9 +59,10 @@ class ChannelDimensions:
         self.sideLength = None
         self.wettedPerimeter = None
         self.hydraulicDiameter = None
+        self.aspectRatio = None
 
     def getChannelDimensions(self, thrustChamberArea):
-        
+
         self.thrustChamberRadius = sqrt(thrustChamberArea / pi)
 
         self.bottomRadius = self.thrustChamberRadius + self.coolingChannels.wallThickness
@@ -79,11 +80,15 @@ class ChannelDimensions:
         self.midWidth = 2 * pi * self.midRadius * (self.individualChannelAngle / 360)
 
         self.individualChannelArea = 0.5 * self.coolingChannels.channelHeight * (self.bottomWidth + self.topWidth)
+
         self.totalChannelArea = self.individualChannelArea * self.coolingChannels.numberOfChannels
 
         self.sideLength = sqrt((((self.topWidth - self.bottomWidth) / 2) ** 2) + (self.height ** 2))
         self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.sideLength * 2)
         self.hydraulicDiameter = 4 * self.individualChannelArea / self.wettedPerimeter
+
+        self.aspectRatio = self.height / self.midWidth
+
 
 class SolverParameters:
 
@@ -242,7 +247,7 @@ class RegenerativeCooling(Component):
 
             # Get friction factor
             if self.coolingChannels.wallRoughnessHeight > 0:
-                frictionFactor = fd.colebrookEquation(self.coolingChannels.wallRoughnessHeight, self.coolingChannels.channelInstance.hydraulicDiameter, coolantReynoldsNumber, convergenceCriteria=self.convergenceCriteria)
+                frictionFactor = fd.colebrookEquation(self.coolingChannels.wallRoughnessHeight, self.coolingChannels.channelInstance.hydraulicDiameter, coolantReynoldsNumber, convergenceCriteria=self.solverParameters.convergenceCriteria)
             elif self.coolingChannels.wallRoughnessHeight == 0:
                 frictionFactor = fd.smoothFrictionFactor(coolantReynoldsNumber)
             else:
@@ -265,7 +270,7 @@ class RegenerativeCooling(Component):
                 gasSideWallTemp = newGasSideWallTemp
                 coolantSideWallTemp = newCoolantSideWallTemp
 
-                gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, gasViscosity, gasSpecificHeat, gasPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=self.solverParameters.bartzEquationCoefficient)
+                gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, chamberViscosity, chamberSpecificHeat, chamberPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=self.solverParameters.bartzEquationCoefficient)
 
                 stationSurfaceState.defineState("T", coolantSideWallTemp, "P", stationOutletState.P)
 
@@ -398,4 +403,4 @@ class RegenerativeCooling(Component):
         print("Coolant Outlet Temperature: " + str(self.outletState.T))
         print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
-        print("Total Pressure Loss: " + str(self.outletState.P - self.inletState.P) + " Pa")
+        print("Total Pressure Loss: " + str((self.outletState.P - self.inletState.P)/1e5) + " Bar")
