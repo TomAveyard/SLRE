@@ -13,10 +13,10 @@ import matplotlib.pyplot as plt
 
 plot = "heat flux"
 
-testThrustChamber = ThrustChamber('methane', 'oxygen', 20.5*10**3, 56, mixtureRatioOverride=3.5, fac=True, CR=7.5, ambientPressure=0.7)
+testThrustChamber = ThrustChamber(fuelName='methane', oxName='oxygen', thrust=20.5*10**3, chamberPressure=56, mixtureRatioOverride=3.5, fac=True, CR=7.5, ambientPressure=0.7)
 
-testThrustChamber.getChamberGeometry(2.25,
-                                     0.065, 
+testThrustChamber.getChamberGeometry(lStar=2.25,
+                                     contractionLength=0.065, 
                                      entranceRadiusOfCurvatureFactor=0.75, 
                                      throatEntranceStartAngle=-135, 
                                      numberOfPointsConverging=100,
@@ -41,12 +41,12 @@ fuel.defineState("T", 108, "P", 3*10**5)
 solverParameters = SolverParameters(bartzEquationCoefficient=0.023*0.33, coolantSideHeatTransferCorrelation="sieder-tate", includeRoughnessCorrection=False)
 
 testFuelTank = Tank(fuel)
-testFuelPump = Pump(0.7, outletPressure=150e5)
-testCoolingChannels = CoolingChannels(96, 0.9e-3, 1.5e-3, 1.25e-3, 365, 0)
-testRegenerativeCooling = RegenerativeCooling(testThrustChamber, testCoolingChannels, solverParameters)
-testTurbine = Turbine(0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
+testFuelPump = Pump(isentropicEfficiency=0.7, outletPressure=150e5)
+testCoolingChannels = CoolingChannels(numberOfChannels=96, wallThickness=0.9e-3, midRibThickness=1.5e-3, channelHeight=1.25e-3, wallConductivity=365, wallRoughnessHeight=0)
+testRegenerativeCooling = RegenerativeCooling(thrustChamber=testThrustChamber, coolingChannels=testCoolingChannels, solverParameters=solverParameters)
+testTurbine = Turbine(isentropicEfficiency=0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
 
-testFuelLine = Line(testFuelTank.outletState, testThrustChamber.fuelMassFlowRate, [testFuelPump, testRegenerativeCooling, testTurbine])
+testFuelLine = Line(inletState=testFuelTank.outletState, massFlowRate=testThrustChamber.fuelMassFlowRate, components=[testFuelPump, testRegenerativeCooling, testTurbine])
 
 if plot == "heat flux":
     fig, ax = plt.subplots()
@@ -107,11 +107,11 @@ elif plot == "channel area":
 ox.defineState("T", 60, "P", 3*10**5)
 
 testOxTank = Tank(ox)
-testOxPump = Pump(0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
+testOxPump = Pump(isentropicEfficiency=0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
 
-testOxLine = Line(testOxTank.outletState, testThrustChamber.oxMassFlowRate, [testOxPump])
+testOxLine = Line(inletState=testOxTank.outletState, massFlowRate=testThrustChamber.oxMassFlowRate, components=[testOxPump])
 
-testCycle = Cycle(testFuelLine, testOxLine, testThrustChamber)
+testCycle = Cycle(fuelLine=testFuelLine, oxLine=testOxLine, thrustChamber=testThrustChamber)
 
 if plot == "cycle":
     diagramStates = [testFuelTank.outletState, testFuelPump.outletState, testRegenerativeCooling.outletState, testTurbine.outletState]

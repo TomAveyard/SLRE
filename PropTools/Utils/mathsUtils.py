@@ -1,15 +1,15 @@
 import sys
 from math import pi, sqrt
 
-def areaToRadius(area):
+def areaToRadius(area: float) -> float:
 
     return sqrt(area / pi)
 
-def radiusToArea(radius):
+def radiusToArea(radius: float) -> float:
 
     return pi * (radius ** 2)
 
-def linearInterpolation(lowerPoint, upperPoint, x=None, y=None):
+def linearInterpolation(lowerPoint: list, upperPoint: list, x: float = None, y: float = None) -> list:
 
     if x == None and y == None:
         sys.exit("No middle point value given")
@@ -26,7 +26,7 @@ def linearInterpolation(lowerPoint, upperPoint, x=None, y=None):
 
     return [x, y]
 
-def lineIntersection(point1, gradient1, point2, gradient2):
+def lineIntersection(point1: float, gradient1: float, point2: float, gradient2: float) -> list:
 
     xIntersection = (point2[1] - point1[1] - (point2[0] * gradient2) + (point1[0] * gradient1)) / (gradient1 - gradient2)
     yIntersection = (gradient1 * xIntersection) + (point1[1] - (point1[0] * gradient1))
@@ -36,13 +36,13 @@ def lineIntersection(point1, gradient1, point2, gradient2):
 # Generates a bezier curve given a list of control point coordinates
 class bezierCurve:
 
-    def __init__(self, controlPoints):
+    def __init__(self, controlPoints: list):
         
         self.controlPoints = controlPoints
         self.n = len(controlPoints) - 1
 
     # Binomial lookup table, more efficient than generating each time
-    def binomial(self, k):
+    def binomial(self, k: float) -> float:
 
         self.pascalsTriangle = [[1],
                                 [1,1],
@@ -64,7 +64,7 @@ class bezierCurve:
         return self.pascalsTriangle[self.n][k]
 
     # Finds the x/y coordinate for a given t, intended as a helper function for the findPoint function 
-    def bezier(self, t, coord):
+    def bezier(self, t: float, coord: str) -> float:
 
         sum = 0
 
@@ -82,7 +82,7 @@ class bezierCurve:
         return sum
 
     # Returns the x,y coordinates for a given t
-    def getPoint(self, t):
+    def getPoint(self, t: float) -> list:
 
         if t > 1 or t < 0:
             sys.exit("t has to be 0 <= t <= 1")
@@ -93,7 +93,7 @@ class bezierCurve:
         return [x,y]
 
 # Estimates the revolved volume of an abitrary line from its coordinates by adding up the volume of the truncated cone between each coordinate
-def revolvedLineVolumeEstimation(axialCoords, radialCoords):
+def revolvedLineVolumeEstimation(axialCoords: list, radialCoords: list) -> float:
 
     if len(axialCoords) != len(radialCoords):
 
@@ -116,7 +116,7 @@ def revolvedLineVolumeEstimation(axialCoords, radialCoords):
 
     return sum
 
-def revolvedLineSurfaceAreaEstimation(axialCoords, radialCoords):
+def revolvedLineSurfaceAreaEstimation(axialCoords: list, radialCoords: list) -> float:
 
     if len(axialCoords) != len(radialCoords):
 
@@ -136,7 +136,7 @@ def revolvedLineSurfaceAreaEstimation(axialCoords, radialCoords):
 
     return sum
 
-def distanceBetweenTwoPoints(point1, point2):
+def distanceBetweenTwoPoints(point1: list, point2: list) -> float:
 
     deltax = abs(point2[0] - point1[0])
     deltay = abs(point2[1] - point1[1])
@@ -145,13 +145,13 @@ def distanceBetweenTwoPoints(point1, point2):
 
 # Gets the distance of a number between two other numbers as a fraction of 1
 # E.g. if it's 0.25 of the way between num1 and num2, then this will return 0.25
-def getRelativeDistanceBetweenNumbers(num1, num2, numx):
+def getRelativeDistanceBetweenNumbers(num1: float, num2: float, numx: float) -> float:
 
     return (numx - num1) / (num2 - num1)
 
 # Method of finding the radius of curvature from 3 points
 # Detailed at http://paulbourke.net/geometry/circlesphere/
-def radiusOfCurvature3Points2D(point1, point2, point3, returnCenterPoint=False):
+def radiusOfCurvature3Points2D(point1: list, point2: list, point3: list, returnCenterPoint: bool = False):
 
     try:
         ma = (point2[1] - point1[1]) / (point2[0] - point1[0])

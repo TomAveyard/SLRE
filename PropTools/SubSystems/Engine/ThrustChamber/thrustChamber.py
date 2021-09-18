@@ -13,19 +13,19 @@ from PropTools.SubSystems.Engine.ThrustChamber.nozzle import ConicalNozzle, RaoB
 class ThrustChamber:
 
     def __init__(self, 
-                fuelName, 
-                oxName,
-                thrust, 
-                chamberPressure, 
-                mixtureRatioOverride=False, 
-                ambientPressure=1.01325, 
-                fac=False,
-                CR=None,
-                facPlenumPressureSpecified=True,
-                mixtureRatioSearchResolution=0.1, 
-                mixtureRatioSearchStart=1, 
-                condition='equilibrium', 
-                throatCondition='equilibrium'):
+                fuelName: str = None, 
+                oxName: str = None,
+                thrust: float = None, 
+                chamberPressure: float = None, 
+                mixtureRatioOverride: float = False, 
+                ambientPressure: float = 1.01325, 
+                fac: bool = False,
+                CR: float = 3,
+                facPlenumPressureSpecified: bool = True,
+                mixtureRatioSearchResolution: float = 0.1, 
+                mixtureRatioSearchStart: float = 1, 
+                condition: str = 'equilibrium', 
+                throatCondition: str = 'equilibrium'):
 
         self.fuel = Propellant(fuelName)
         self.ox = Propellant(oxName)
@@ -75,7 +75,7 @@ class ThrustChamber:
         self.radialCoords = None
 
     # Returns a cea object using the unit system seen below
-    def getCEAObject(self):
+    def getCEAObject(self) -> CEA_Obj:
 
         # If facCR (finite area combustor contraction ratio) is not specified, then an infinite area combustor is assumed
         if self.fac == False:
@@ -114,7 +114,7 @@ class ThrustChamber:
         return CEAObject
 
     # Gets the most relevant CEA results and assigns them to easy to access variables in the thrustChamber object
-    def getCEAResults(self):
+    def getCEAResults(self) -> None:
 
         c, tc = self.convertConditionToCEAFlag(self.condition, self.throatCondition)
         
@@ -156,7 +156,7 @@ class ThrustChamber:
         self.temperatures = self.CEA.get_Temperatures(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc)
         self.exitMachNumber = self.CEA.get_MachNumber(Pc=self.injectionPressure, MR=self.mixtureRatio, eps=self.expansionRatio, frozen=c, frozenAtThroat=tc)
     
-    def getExitTransportPropertiesAtExpansionRatio(self, expansionRatio):
+    def getExitTransportPropertiesAtExpansionRatio(self, expansionRatio: float) -> list:
 
         c, tc = self.convertConditionToCEAFlag(self.condition, self.throatCondition)
 
@@ -165,7 +165,7 @@ class ThrustChamber:
     # If the mixture ratio override is not set, then it is assumed maximum specific impulse is wanted
     # This uses CEA to calculate the Isp at intervals specified by searchResolution, starting from a mixture ratio specified by startSearch 
     # (can be increased if you know it'll be above 1 to reduce number of calculations)
-    def getMaxSpecificImpulseMixtureRatio(self, searchResolution=0.1, startSearch=1):
+    def getMaxSpecificImpulseMixtureRatio(self, searchResolution: float = 0.1, startSearch: float = 1) -> float:
         
         # Initialises variables for following loop
         i = startSearch
@@ -192,7 +192,7 @@ class ThrustChamber:
 
     # rocketCEA uses 0 to indicate equilibrium and 1 to indcate frozen
     # This returns the relevant number from the strings of 'equilibrium' and 'frozen'
-    def convertConditionToCEAFlag(self, condition, throatCondition):
+    def convertConditionToCEAFlag(self, condition: str, throatCondition: str) -> tuple:
 
         # Converts equlibirum/frozen statements into a flag for the CEA functions
         if condition.lower() == 'equilibrium':
@@ -211,50 +211,50 @@ class ThrustChamber:
         
         return c, ct
 
-    def getMassFlowRate(self):
+    def getMassFlowRate(self) -> None:
 
         self.propellantMassFlowRate = self.thrust / (self.specificImpulse * G)
         self.fuelMassFlowRate = self.propellantMassFlowRate * (1 / self.mixtureRatio)
         self.oxMassFlowRate = self.propellantMassFlowRate * self.mixtureRatio
 
-    def getExitVelocity(self):
+    def getExitVelocity(self) -> None:
 
         RSpecific = R * 1000 / self.exitMolWt
         self.exitVelocity = sqrt(self.exitGamma * RSpecific * self.temperatures[-1]) * self.exitMachNumber
 
-    def getExitSizes(self):
+    def getExitSizes(self) -> None:
 
         self.exitArea = self.propellantMassFlowRate / (self.exitVelocity * self.densities[-1])
         self.exitRadius = areaToRadius(self.exitArea)
         self.exitDiameter = self.exitRadius * 2
 
-    def getThroatSizes(self):
+    def getThroatSizes(self) -> None:
 
         self.throatArea = self.exitArea / self.expansionRatio
         self.throatRadius = areaToRadius(self.throatArea)
         self.throatDiameter = self.throatRadius * 2
 
-    def getChamberGeometry(self, lStar, contractionLength, entranceRadiusOfCurvatureFactor=1.5, throatEntranceStartAngle=(-135), numberOfPointsConverging=100, numberOfPointsStraight=100):
+    def getChamberGeometry(self, lStar: float = None, contractionLength: float = None, entranceRadiusOfCurvatureFactor: float = 1.5, throatEntranceStartAngle: float = (-135), numberOfPointsConverging: int = 100, numberOfPointsStraight: int = 100) -> None:
 
-        self.combustionChamber = CombustionChamber(lStar, 
-            self.throatRadius, 
-            self.CR, 
-            contractionLength, 
+        self.combustionChamber = CombustionChamber(lStar=lStar, 
+            throatRadius=self.throatRadius, 
+            contractionRatio=self.CR, 
+            contractionLength=contractionLength, 
             entranceRadiusOfCurvatureFactor=entranceRadiusOfCurvatureFactor, 
             throatEntranceStartAngle=throatEntranceStartAngle, 
             numberOfPointsConverging=numberOfPointsConverging,
             numberOfPointsStraight=numberOfPointsStraight
             )
 
-    def getRaoBellNozzleGeometry(self, lengthFraction, numberOfPoints=300):
+    def getRaoBellNozzleGeometry(self, lengthFraction: float = None, numberOfPoints: int = 300) -> None:
 
-        self.nozzle = RaoBellNozzle(self.expansionRatio, self.throatRadius, lengthFraction, numberOfPoints=numberOfPoints)
+        self.nozzle = RaoBellNozzle(expansionRatio=self.expansionRatio, throatRadius=self.throatRadius, lengthFraction=lengthFraction, numberOfPoints=numberOfPoints)
 
-    def getConicalNozzleGeometry(self, divergenceHalfAngle=15, numberOfPoints=300):
+    def getConicalNozzleGeometry(self, divergenceHalfAngle=15, numberOfPoints=300) -> None:
 
         self.nozzle = ConicalNozzle(self.expansionRatio, self.throatRadius, divergenceHalfAngle=divergenceHalfAngle, numberOfPoints=numberOfPoints)
 
-    def getThrustChamberCoords(self):
+    def getThrustChamberCoords(self) -> None:
 
         self.throatAverageRadiusOfCurvature = (self.nozzle.throatRadiusOfCurvature + self.combustionChamber.entranceRadiusOfCurvature) / 2
 
@@ -264,11 +264,11 @@ class ThrustChamber:
         
         self.getSurfaceArea()
 
-    def getSurfaceArea(self):
+    def getSurfaceArea(self) -> None:
 
         self.surfaceArea = revolvedLineSurfaceAreaEstimation(self.axialCoords, self.radialCoords)
 
-    def plotGeometry(self, part="thrust chamber", show=True, save=False, plotColor="black"):
+    def plotGeometry(self, part: str = "thrust chamber", show: bool = True, save: bool = False, plotColor: str = "black"):
 
         fig, ax = plt.subplots()
 

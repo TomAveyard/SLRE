@@ -11,16 +11,16 @@ from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-testThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 30, fac=True, CR=5, ambientPressure=0.6)
+testThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=30, fac=True, CR=5, ambientPressure=0.6)
 
-testThrustChamber.getChamberGeometry(1.1,
-                                     0.065, 
+testThrustChamber.getChamberGeometry(lStar=1.1,
+                                     contractionLength=0.065, 
                                      entranceRadiusOfCurvatureFactor=0.75, 
                                      throatEntranceStartAngle=-135, 
                                      numberOfPointsConverging=50,
                                      numberOfPointsStraight=20)
 
-testThrustChamber.getRaoBellNozzleGeometry(0.8, numberOfPoints=100)
+testThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=100)
 testThrustChamber.getThrustChamberCoords()
 
 testThrustChamber.plotGeometry()

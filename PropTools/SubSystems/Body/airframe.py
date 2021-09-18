@@ -2,6 +2,8 @@ import sys
 import csv
 from PropTools.Utils.fileHandling import openFromRelativePath
 
+#TODO: Update to reflect changes to underlying architecture
+
 class Airframe:
 
     def __init__(self):

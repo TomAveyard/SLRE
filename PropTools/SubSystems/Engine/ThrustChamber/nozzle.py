@@ -7,7 +7,7 @@ import sys
 # Class to contain common parameters and functions for subclasses
 class Nozzle:
 
-    def __init__(self, expansionRatio, throatRadius, numberOfPoints=100):
+    def __init__(self, expansionRatio: float = None, throatRadius: float = None, numberOfPoints: float = 100):
 
         self.expansionRatio = expansionRatio
         self.throatRadius = throatRadius
@@ -17,12 +17,12 @@ class Nozzle:
         self.axialCoords = None
         self.radialCoords = None
 
-    def getConicalLength(self, divergenceHalfAngle):
+    def getConicalLength(self, divergenceHalfAngle: float = 15) -> float:
 
         return self.throatRadius * (sqrt(self.expansionRatio) - 1) / tan(radians(divergenceHalfAngle))
 
     # Generates an evenly spaced array for axial coordinates, and a zero array as a placeholder for radial coordinates
-    def getGeometryArrays(self):
+    def getGeometryArrays(self) -> None:
 
         startCoord = 0
         endCoord = self.length
@@ -32,18 +32,18 @@ class Nozzle:
 
         return axialCoords, radialCoords
 
-    def getSurfaceArea(self):
+    def getSurfaceArea(self) -> None:
 
         return revolvedLineSurfaceAreaEstimation(self.axialCoords, self.radialCoords)
 
-    def getVolume(self):
+    def getVolume(self) -> None:
 
         return revolvedLineVolumeEstimation(self.axialCoords, self.radialCoords)
 
 # Subclass for a conical nozzle
 class ConicalNozzle(Nozzle):
 
-    def __init__(self, expansionRatio, throatRadius, divergenceHalfAngle=15, numberOfPoints=100, throatRadiusOfCurvatureFactor=1):
+    def __init__(self, expansionRatio: float = None, throatRadius: float = None, divergenceHalfAngle: float = 15, numberOfPoints: int = 100, throatRadiusOfCurvatureFactor: float = 1):
 
         super().__init__(expansionRatio, throatRadius, numberOfPoints=numberOfPoints)
 
@@ -54,7 +54,7 @@ class ConicalNozzle(Nozzle):
         self.throatRadiusOfCurvatureFactor = throatRadiusOfCurvatureFactor
         self.throatRadiusOfCurvature = self.throatRadius * self.throatRadiusOfCurvatureFactor
 
-    def getNozzleCoords(self):
+    def getNozzleCoords(self) -> None:
 
         i = 0
         
@@ -67,7 +67,7 @@ class ConicalNozzle(Nozzle):
 # Subclass for a Rao approximation bell nozzle
 class RaoBellNozzle(Nozzle):
 
-    def __init__(self, expansionRatio, throatRadius, lengthFraction, numberOfPoints=100):
+    def __init__(self, expansionRatio: float = None, throatRadius: float = None, lengthFraction: float = None, numberOfPoints: int = 100):
         super().__init__(expansionRatio, throatRadius, numberOfPoints=numberOfPoints)
 
         self.lengthFraction = lengthFraction
@@ -83,7 +83,7 @@ class RaoBellNozzle(Nozzle):
         self.getNozzleCoords()
     
     # Uses linear interpolation to estimate the intial and exit wall angles from the data above
-    def getWallAngles(self, type):
+    def getWallAngles(self, type: str) -> float:
 
         # The 4 following arrays contain data extracted from Fig 4-16 from
         # Huzel, D. and Huang, D., 1992. Modern engineering for design of liquid propellant rocket engines. 
@@ -141,7 +141,7 @@ class RaoBellNozzle(Nozzle):
             return wallAngle1 + tExpansionRatio * abs(wallAngle2 - wallAngle1)
 
     # Gets the radial coordinates for each of the evenly spaced axial coordinates
-    def getNozzleCoords(self):
+    def getNozzleCoords(self) -> None:
 
         i=0
 

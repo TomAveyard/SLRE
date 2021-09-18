@@ -5,7 +5,7 @@ from math import pi, tanh, sqrt
 
 # Gas Side Correlations
 
-def bartzEquation(throatDiameter, viscosity, specificHeat, prandtlNumber, chamberPressure, chamberTemp, cStar, localArea, gasSideWallTemp, machNumber, gamma, throatAverageRadiusOfCurvature=None, C1=0.026):
+def bartzEquation(throatDiameter: float, viscosity: float, specificHeat: float, prandtlNumber: float, chamberPressure: float, chamberTemp: float, cStar: float, localArea: float, gasSideWallTemp: float, machNumber: float, gamma: float, throatAverageRadiusOfCurvature: float = None, C1: float = 0.026) -> float:
 
         firstBracket = C1 / (throatDiameter ** 0.2)
         secondBracket = (((viscosity ** 0.2) * specificHeat) / (prandtlNumber ** 0.6))
@@ -30,41 +30,41 @@ def bartzEquation(throatDiameter, viscosity, specificHeat, prandtlNumber, chambe
 
 # Coolant Side Correlations
 
-def dittusBoelterEquation(reynoldsNumber, prandtlNumber, C1=0.023):
+def dittusBoelterEquation(reynoldsNumber: float, prandtlNumber: float, C1: float = 0.023) -> float:
 
     return C1 * (reynoldsNumber ** 0.8) * (prandtlNumber ** 0.4)
 
-def siederTateEquation(reynoldsNumber, prandtlNumber, bulkViscosity, surfaceViscosity, C1=0.023):
+def siederTateEquation(reynoldsNumber: float, prandtlNumber: float, bulkViscosity: float, surfaceViscosity: float, C1: float = 0.023) -> float:
 
     return C1 * (reynoldsNumber ** (4/5)) * (prandtlNumber ** (1/3)) * ((bulkViscosity / surfaceViscosity) ** 0.14)
 
-def superCriticalEquation(specificHeat, viscosity, prandtlNumber, massFlowRate, hydraulicDiameter, coolantBulkTemp, coolantSideWallTemp, C1=0.023):
+def superCriticalEquation(specificHeat: float, viscosity: float, prandtlNumber: float, massFlowRate: float, hydraulicDiameter: float, coolantBulkTemp: float, coolantSideWallTemp: float, C1: float = 0.023):
 
     return ((C1 * specificHeat * (viscosity ** 0.2)) / (prandtlNumber ** (2/3))) * (((massFlowRate * G) ** 0.8) / (hydraulicDiameter ** 0.2)) * ((coolantBulkTemp / coolantSideWallTemp) ** 0.55)
 
-def taylorEquation(reynoldsNumber, prandtlNumber, coolantBulkTemp, coolantSurfaceTemp, hydraulicDiameter, distance, C1=0.023):
+def taylorEquation(reynoldsNumber: float, prandtlNumber: float, coolantBulkTemp: float, coolantSurfaceTemp: float, hydraulicDiameter: float, distance: float, C1: float = 0.023) -> float:
 
     exponent = 0.57 - 1.59 * (hydraulicDiameter / distance)
 
     return C1 * (reynoldsNumber ** 0.8) * (prandtlNumber ** 0.4) * ((coolantBulkTemp / coolantSurfaceTemp) ** exponent)
 
-def ruanMengEquation(reynoldsNumber, prandtlNumber, coolantBulkDensity, coolantSurfaceDensity, hydraulicDiameter, distance, C1=0.0069):
+def ruanMengEquation(reynoldsNumber: float, prandtlNumber: float, coolantBulkDensity: float, coolantSurfaceDensity: float, hydraulicDiameter: float, distance: float, C1: float = 0.0069) -> float:
 
     return C1 * (reynoldsNumber ** 0.8) * (prandtlNumber ** 0.66) * ((coolantBulkDensity / coolantSurfaceDensity) ** 0.43) * (1 + 2.4 * (hydraulicDiameter / distance))
 
-def nusseltNumberToHeatTransferCoefficient(nusseltNumber, charactersiticLength, thermalConductivity):
+def nusseltNumberToHeatTransferCoefficient(nusseltNumber: float, charactersiticLength: float, thermalConductivity: float) -> float:
 
     return (nusseltNumber * thermalConductivity) / charactersiticLength
 
 # Fin heat transfer
 
-def finEffectiveness(heatTransferCoeffcient, ribThickness, thermalConductivity, channelHeight):
+def finEffectiveness(heatTransferCoeffcient: float, ribThickness: float, thermalConductivity: float, channelHeight: float) -> float:
         
     common = sqrt((2 * heatTransferCoeffcient * ribThickness) / thermalConductivity) * (channelHeight / ribThickness)
 
     return tanh(common) / common
 
-def applyFinEffectiveness(heatTransferCoefficient, finCorrectionFactor, channelWidth, channelHeight, ribThickness):
+def applyFinEffectiveness(heatTransferCoefficient: float, finCorrectionFactor: float, channelWidth: float, channelHeight: float, ribThickness: float) -> float:
 
     numerator = channelWidth + (2 * finCorrectionFactor * channelHeight)
     denominator = channelWidth + ribThickness
@@ -73,7 +73,7 @@ def applyFinEffectiveness(heatTransferCoefficient, finCorrectionFactor, channelW
 
 # Curvature correction
 
-def curvatureCorrectionFactor(p1, p2, p3, reynoldsNumber, hydraulicDiameter):
+def curvatureCorrectionFactor(p1: list, p2: list, p3: list, reynoldsNumber: float, hydraulicDiameter: float) -> float:
 
     radiusOfCurvature, centrePoint = radiusOfCurvature3Points2D(p1, p2, p3, returnCenterPoint=True)
 
@@ -90,7 +90,7 @@ def curvatureCorrectionFactor(p1, p2, p3, reynoldsNumber, hydraulicDiameter):
 
 # Roughness correction
 
-def roughnessCorrectionFactor(frictionFactor, reynoldsNumber, prandtlNumber):
+def roughnessCorrectionFactor(frictionFactor: float, reynoldsNumber: float, prandtlNumber: float) -> float:
 
     roughSmoothRatio = frictionFactor / smoothFrictionFactor(reynoldsNumber)
 

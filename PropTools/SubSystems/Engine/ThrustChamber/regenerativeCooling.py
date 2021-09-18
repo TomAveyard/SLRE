@@ -19,12 +19,12 @@ import PropTools.Thermo.fluidDynamics as fd
 class CoolingChannels:
 
     def __init__(self,
-        numberOfChannels,
-        wallThickness,
-        midRibThickness,
-        channelHeight, 
-        wallConductivity, 
-        wallRoughnessHeight):
+        numberOfChannels: int = None,
+        wallThickness: float = None,
+        midRibThickness: float = None,
+        channelHeight: float = None, 
+        wallConductivity: float = None, 
+        wallRoughnessHeight: float = None):
 
         self.numberOfChannels = numberOfChannels
         self.wallThickness = wallThickness
@@ -39,7 +39,7 @@ class CoolingChannels:
 # Class to store the dimensions of a single instance of the cooling channels at a certain area
 class ChannelDimensions:
 
-    def __init__(self, coolingChannels: CoolingChannels):
+    def __init__(self, coolingChannels: CoolingChannels = None):
 
         self.coolingChannels = coolingChannels
 
@@ -61,7 +61,7 @@ class ChannelDimensions:
         self.hydraulicDiameter = None
         self.aspectRatio = None
 
-    def getChannelDimensions(self, thrustChamberArea):
+    def getChannelDimensions(self, thrustChamberArea: float = None) -> None:
 
         self.thrustChamberRadius = sqrt(thrustChamberArea / pi)
 
@@ -93,14 +93,13 @@ class ChannelDimensions:
 class SolverParameters:
 
     def __init__(self, 
-    bartzEquationCoefficient=0.023,
-    coolantSideHeatTransferCorrelation="dittus-boelter",
-    coolantSideHeatTransferCorrelationCoefficient="default",
-    includeFinCorrection=True,
-    includeCurvatureCorrection=True,
-    includeRoughnessCorrection=True,
-    convergenceCriteria=0.01
-    ):
+    bartzEquationCoefficient: float = 0.023,
+    coolantSideHeatTransferCorrelation: str = "dittus-boelter",
+    coolantSideHeatTransferCorrelationCoefficient: str = "default",
+    includeFinCorrection: bool = True,
+    includeCurvatureCorrection: bool = True,
+    includeRoughnessCorrection: bool = True,
+    convergenceCriteria: float = 0.01):
 
         self.bartzEquationCoefficient = bartzEquationCoefficient
         self.coolantSideHeatTransferCorrelation = coolantSideHeatTransferCorrelation
@@ -116,7 +115,7 @@ class SolverParameters:
 # with the channel dimensions defined by the cooling channel object
 class RegenerativeCooling(Component):
 
-    def __init__(self, thrustChamber: ThrustChamber, coolingChannels: CoolingChannels, solverParameters: SolverParameters):
+    def __init__(self, thrustChamber: ThrustChamber = None, coolingChannels: CoolingChannels = None, solverParameters: SolverParameters = None):
 
         super().__init__()
         self.type = "regenerative cooling"
@@ -140,7 +139,7 @@ class RegenerativeCooling(Component):
         self.coolantSideHeatTransferCoefficients = np.zeros(self.numberOfStations)
         self.channelAreas = np.zeros(self.numberOfStations)
 
-    def calculate(self, inletState: Propellant, massFlowRate):
+    def calculate(self, inletState: Propellant = None, massFlowRate: float = None) -> None:
 
         print("---")
         print("Starting Heat Transfer Calculation")

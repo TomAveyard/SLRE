@@ -7,16 +7,16 @@ from PropTools.SubSystems.Body.airframe import Airframe
 from PropTools.FlightSimulation.flight import Flight
 from math import pi
 
-sf2ThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 35, fac=True, CR=5, ambientPressure=0.7)
+sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, CR=5, ambientPressure=0.7)
 
-sf2ThrustChamber.getChamberGeometry(1.1,
-                                    0.05, 
+sf2ThrustChamber.getChamberGeometry(lStar=1.1,
+                                    contractionLength=0.05, 
                                     entranceRadiusOfCurvatureFactor=0.75, 
                                     throatEntranceStartAngle=-135, 
                                     numberOfPointsConverging=100,
                                     numberOfPointsStraight=50)
 
-sf2ThrustChamber.getRaoBellNozzleGeometry(0.8, numberOfPoints=100)
+sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=100)
 sf2ThrustChamber.getThrustChamberCoords()
 
 fuel = Propellant(sf2ThrustChamber.fuel.name)
