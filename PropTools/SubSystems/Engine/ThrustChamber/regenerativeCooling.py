@@ -1,14 +1,8 @@
-from io import IncrementalNewlineDecoder
-from sys import exit
-from chemicals import temperature
-
-from matplotlib.pyplot import cool
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import sqrt, pi, log10, tanh
+from math import pi
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
-from PropTools.Utils.constants import G
-from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints, radiusOfCurvature3Points2D
+from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
 from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.Thermo.dimensionlessNumbers import reynoldsNumber, prandtlNumber
 import PropTools.Thermo.heatTransfer as ht
