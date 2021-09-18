@@ -1,6 +1,6 @@
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import pi
+from math import pi, sqrt
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
 from PropTools.SubSystems.Engine.Cycle.component import Component
