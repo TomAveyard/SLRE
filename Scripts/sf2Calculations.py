@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 solverParameters = SolverParameters(bartzEquationCoefficient=0.023, coolantSideHeatTransferCorrelation="sieder tate")
 
 # Define thrust chamber
-sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, CR=5, ambientPressure=0.7)
+sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, contractionRatio=5, ambientPressure=0.7)
 cea = sf2ThrustChamber.getCEAObject()
 
 # Define chamber geometry
