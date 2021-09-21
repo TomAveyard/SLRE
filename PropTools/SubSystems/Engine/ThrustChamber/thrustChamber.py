@@ -37,14 +37,14 @@ class ThrustChamber:
         self.ambientPressure = ambientPressure
 
         self.fac = fac
-        self.CR = contractionRatio
+        self.contractionRatio = contractionRatio
 
         # If a finite area combustor contraction ratio is specified and the chamber pressure given is the plenum/combustion pressure
         # then this estimates an injector face pressure for use in the calculations.
         # Otherwise the injection pressure is the chamber pressure specified.
         if self.fac == True and facPlenumPressureSpecified == True:
             self.facPlenumPressureSpecified = facPlenumPressureSpecified
-            self.injectionPressureOverCombustionPressure = 1.0 + 0.54 / self.CR**2.2
+            self.injectionPressureOverCombustionPressure = 1.0 + 0.54 / self.contractionRatio**2.2
             self.injectionPressure = self.chamberPressure * self.injectionPressureOverCombustionPressure
         else:
             self.injectionPressure = self.chamberPressure
@@ -98,7 +98,7 @@ class ThrustChamber:
 
             CEAObject = CEA_Obj(oxName=self.ox.ceaName, 
                 fuelName=self.fuel.ceaName,
-                fac_CR=self.CR, 
+                fac_CR=self.contractionRatio, 
                 isp_units = 'sec',
                 cstar_units = 'm/s',
                 pressure_units = 'Bar',
@@ -238,7 +238,7 @@ class ThrustChamber:
 
         self.combustionChamber = CombustionChamber(lStar=lStar, 
             throatRadius=self.throatRadius, 
-            contractionRatio=self.CR, 
+            contractionRatio=self.contractionRatio, 
             contractionLength=contractionLength, 
             entranceRadiusOfCurvatureFactor=entranceRadiusOfCurvatureFactor, 
             throatEntranceStartAngle=throatEntranceStartAngle, 
