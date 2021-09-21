@@ -19,8 +19,6 @@ sf2ThrustChamber.getChamberGeometry(lStar=1.1,
 sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=100)
 sf2ThrustChamber.getThrustChamberCoords()
 
-sf2ThrustChamber.plotGeometry()
-
 fuel = Propellant(sf2ThrustChamber.fuel.name)
 ox = Propellant(sf2ThrustChamber.ox.name)
 
@@ -29,18 +27,18 @@ ox.defineState("T", 60, "P", 3*10**5)
 
 karmanAlpha = Vehicle("Karman Alpha", "ethanol", "oxygen")
 
-tankDiameter = 0.3
-wallThickness = 0.005
+tankDiameter = 0.30
+wallThickness = 0.002
 outerDiameter = tankDiameter + 2 * wallThickness
 
-karmanAlpha.airframe.setDragCharacteristics(outerDiameter, "Examples/dragCurve.csv")
+karmanAlpha.airframe.setDragCharacteristics(outerDiameter, "Scripts/dragCurve.csv")
 
 karmanAlpha.engine.thrust = sf2ThrustChamber.thrust
 karmanAlpha.engine.specificImpulse = sf2ThrustChamber.specificImpulse
 
-karmanAlpha.airframe.setMass(100)
+karmanAlpha.airframe.setMass(30)
 
-burnTime = 50
+burnTime = 46
 
 ethanolMassRequired = sf2ThrustChamber.fuelMassFlowRate * burnTime
 oxygenMassRequired = sf2ThrustChamber.oxMassFlowRate * burnTime
@@ -61,14 +59,10 @@ flight = Flight(karmanAlpha)
 flight.flightSimulation(timeStep=0.5)
 
 print("---")
-print("Nozzle Exit Diameter: " + str(sf2ThrustChamber.exitDiameter))
-print("Nozzle Throat Diameter: " + str(sf2ThrustChamber.throatDiameter))
-print("---")
 print("Apogee: " + str(flight.apogee))
 print("Fuel Mass Required: " + str(ethanolMassRequired))
 print("Oxidiser Mass Required: " + str(oxygenMassRequired))
 print("Fuel Volume Required: " + str(ethanolVolumeRequired))
 print("Oxidiser Volume Required: " + str(oxygenVolumeRequired))
-print("Total Volume Required: " + str(totalVolume))
 print("Total Cylindrical Tank Height Required: " + str(tankHeight))
 print("---")
