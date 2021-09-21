@@ -3,7 +3,7 @@
 </div>
 <div align="center">
     <p><b>S</b>imulation of <b>L</b>iquid <b>R</b>ocket <b>E</b>ngines</p>
-    <p>(Pronounced "Celery")</p>
+    <p><i>(Pronounced "Celery")</i></p>
 </div>
 
 ---
