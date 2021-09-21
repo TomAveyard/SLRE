@@ -2,6 +2,8 @@ import matplotlib.pyplot as plt
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from math import ceil, floor
 
+#TODO: Update/move to dedicated diagramming module
+
 class TSCycleDiagram:
 
     def __init__(self, substance, states, SPadding=100, TPadding=10):

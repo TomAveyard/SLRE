@@ -1,7 +1,8 @@
 import sys
 from ambiance import Atmosphere
 import matplotlib.pyplot as plt
-from numpy import save
+
+#TODO: Update to reflect new changes to underlying architecture
 
 class Flight:
 

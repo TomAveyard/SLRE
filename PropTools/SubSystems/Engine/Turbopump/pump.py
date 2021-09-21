@@ -4,7 +4,7 @@ from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 
 class Pump(Component):
 
-    def __init__(self, isentropicEfficiency, pressureRise=None, outletPressure=None):
+    def __init__(self, isentropicEfficiency: float = None, pressureRise: float = None, outletPressure: float = None):
 
         super().__init__() # Contains self.inletState, self.outletState, self.type
         self.isentropicEfficiency = isentropicEfficiency
@@ -24,7 +24,7 @@ class Pump(Component):
         self.massFlowRate = None
         self.power = None
 
-    def calculate(self, inletState: Propellant, massFlowRate):
+    def calculate(self, inletState: Propellant = None, massFlowRate: float = None) -> None:
 
         self.inletState = inletState
 

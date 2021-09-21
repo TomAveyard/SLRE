@@ -9,7 +9,7 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 
 class Line:
 
-    def __init__(self, inletState: Propellant, massFlowRate: float, components: "list[Component]"):
+    def __init__(self, inletState: Propellant = None, massFlowRate: float = None, components: "list[Component]" = None):
 
         self.inletState = inletState
         self.massFlowRate = massFlowRate
@@ -40,7 +40,7 @@ class Line:
 
 class Cycle:
 
-    def __init__(self, fuelLine: Line, oxLine: Line, thrustChamber: ThrustChamber):
+    def __init__(self, fuelLine: Line = None, oxLine: Line = None, thrustChamber: ThrustChamber = None):
 
         self.fuelLine = fuelLine
         self.oxLine = oxLine

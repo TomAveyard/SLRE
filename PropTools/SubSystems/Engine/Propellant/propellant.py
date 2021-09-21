@@ -6,7 +6,7 @@ from PropTools.Utils.fileHandling import openFromRelativePath
 
 class Propellant:
 
-    def __init__(self, name, library=None):
+    def __init__(self, name: str, library: str = None):
 
         self.name = name
         self.symbol = None
@@ -64,7 +64,7 @@ class Propellant:
         self.Q = None
 
     # Loads settings for propellant from propellantData.json file where these are stored
-    def setSymbols(self):
+    def setSymbols(self) -> None:
         
         f = openFromRelativePath("PropTools/SubSystems/Engine/Propellant/propellantData.json")
         data = json.load(f)
@@ -81,7 +81,8 @@ class Propellant:
         f.close()
 
     # Defines the entire state of the propellant and the point specified by 2 properties of choice
-    def defineState(self, property1, property1Value, property2, property2Value):
+    #TODO: rework so that input is property symbol=x e.g. T=298, rather than the 4 seperate inputs
+    def defineState(self, property1: str, property1Value: float, property2: str, property2Value: float) -> None:
 
             # Temporary dictionary to store property values
             propertiesDict = {

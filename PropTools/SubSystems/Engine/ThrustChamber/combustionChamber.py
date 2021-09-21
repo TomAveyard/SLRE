@@ -5,14 +5,14 @@ from PropTools.Utils import mathsUtils
 class CombustionChamber:
 
     def __init__(self, 
-        lStar, 
-        throatRadius, 
-        contractionRatio, 
-        contractionLength, 
-        entranceRadiusOfCurvatureFactor=1.5, 
-        throatEntranceStartAngle=(-135), 
-        numberOfPointsConverging=100,
-        numberOfPointsStraight=100):
+        lStar: float = None, 
+        throatRadius: float = None, 
+        contractionRatio: float = None, 
+        contractionLength: float = None, 
+        entranceRadiusOfCurvatureFactor: float = 1.5, 
+        throatEntranceStartAngle: float = (-135), 
+        numberOfPointsConverging: int = 100,
+        numberOfPointsStraight: int = 100):
 
         self.lStar = lStar
         self.throatRadius = throatRadius
@@ -45,12 +45,12 @@ class CombustionChamber:
         self.surfaceArea = self.getChamberSurfaceArea()
 
 
-    def getChamberVolume(self):
+    def getChamberVolume(self) -> None:
         
         return self.lStar * self.throatArea
 
     # Gets the throat entrance coordinates
-    def getEntranceCoords(self):
+    def getEntranceCoords(self) -> None:
 
         i = 0
         angle = 0
@@ -67,7 +67,7 @@ class CombustionChamber:
             
         return i, angle
 
-    def getChamberCoords(self):
+    def getChamberCoords(self) -> None:
 
         i, angle = self.getEntranceCoords()
 
@@ -119,6 +119,6 @@ class CombustionChamber:
         self.axialCoords = np.flip(self.axialCoords, 0)
         self.radialCoords = np.flip(self.radialCoords, 0)
 
-    def getChamberSurfaceArea(self):
+    def getChamberSurfaceArea(self) -> None:
 
         return mathsUtils.revolvedLineSurfaceAreaEstimation(self.axialCoords, self.radialCoords)

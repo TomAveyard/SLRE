@@ -3,6 +3,8 @@ from rocketcea.cea_obj_w_units import CEA_Obj
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.Cycle.cycle import *
 
+#TODO: Update to reflect changes to underlying architecture
+
 class Engine:
 
     def __init__(self, fuelName, oxName):

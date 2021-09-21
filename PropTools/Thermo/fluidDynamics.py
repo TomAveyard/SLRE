@@ -2,13 +2,13 @@ from math import log10, sqrt
 
 # Basic Equations
 
-def massFlowRateToVelocity(massFlowRate, density, area):
+def massFlowRateToVelocity(massFlowRate: float, density: float, area: float) -> float:
 
         return massFlowRate / (density * area)
 
 # Nozzle Dynamics
 
-def getSubsonicMachNumber(localArea, throatArea, gamma, accuracy=0.001):
+def getSubsonicMachNumber(localArea: float, throatArea: float, gamma: float, accuracy: float = 0.001) -> float:
 
     # Gets local mach number upstream of the throat as it is not possible to use CEA to get this
     # Uses the Newton-Raphson method to iteratively solve for mach number from area ratio to the specified accuracy
@@ -39,11 +39,11 @@ def getSubsonicMachNumber(localArea, throatArea, gamma, accuracy=0.001):
 
     return subsonicMachNumber
 
-def getGasTemp(area, mach, gamma, chamberTemp):
+def getGasTemp(area: float, mach: float, gamma: float, chamberTemp: float):
 
     return chamberTemp / (1 + ((gamma - 1) / 2) * (mach ** 2))
 
-def getAdiabaticWallTemp(gasTemp, mach, gamma, prandtlNumber):
+def getAdiabaticWallTemp(gasTemp: float, mach: float, gamma: float, prandtlNumber: float) -> float:
 
     r = prandtlNumber ** (1/3)
 
@@ -51,7 +51,7 @@ def getAdiabaticWallTemp(gasTemp, mach, gamma, prandtlNumber):
 
 # Pipe flow
 
-def smoothFrictionFactor(reynoldsNumber):
+def smoothFrictionFactor(reynoldsNumber: float) -> float:
 
     if reynoldsNumber >= 10 ** 4:
 
@@ -61,11 +61,11 @@ def smoothFrictionFactor(reynoldsNumber):
 
         return 0.0791 / (reynoldsNumber ** 0.25)
 
-def pressureLoss(frictionFactor, length, hydraulicDiameter, density, velocity):
+def pressureLoss(frictionFactor: float, length: float, hydraulicDiameter: float, density: float, velocity: float) -> float:
 
     return frictionFactor * (length / hydraulicDiameter) * 0.5 * density * (velocity ** 2)
 
-def colebrookEquation(channelRoughness, hydraulicDiameter, reynoldsNumber, convergenceCriteria=0.01):
+def colebrookEquation(channelRoughness: float, hydraulicDiameter: float, reynoldsNumber: float, convergenceCriteria: float = 0.01) -> float:
 
     x = -2 * log10(channelRoughness / (3.7 * hydraulicDiameter))
     xPrev = x + 10

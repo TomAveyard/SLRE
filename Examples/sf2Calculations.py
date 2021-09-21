@@ -11,18 +11,19 @@ import matplotlib.pyplot as plt
 solverParameters = SolverParameters(bartzEquationCoefficient=0.023, coolantSideHeatTransferCorrelation="sieder tate")
 
 # Define thrust chamber
-sf2ThrustChamber = ThrustChamber('ethanol', 'oxygen', 10*10**3, 35, fac=True, CR=5, ambientPressure=0.7)
+sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, contractionRatio=5, ambientPressure=0.7)
+cea = sf2ThrustChamber.getCEAObject()
 
 # Define chamber geometry
-sf2ThrustChamber.getChamberGeometry(1.1,
-                                    0.05, 
+sf2ThrustChamber.getChamberGeometry(lStar=1.1,
+                                    contractionLength=0.05, 
                                     entranceRadiusOfCurvatureFactor=0.75, 
                                     throatEntranceStartAngle=-135, 
                                     numberOfPointsConverging=100,
                                     numberOfPointsStraight=50)
 
 # Define the nozzle geometry
-sf2ThrustChamber.getRaoBellNozzleGeometry(0.8, numberOfPoints=100)
+sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=100)
 
 # Get the thrust chamber coordinates
 sf2ThrustChamber.getThrustChamberCoords()
@@ -34,17 +35,22 @@ oxTank = Propellant(sf2ThrustChamber.ox.name)
 oxTank.defineState("T", 60, "P", 3*10**5)
 
 # Define the components on the fuel line
-fuelPump = Pump(0.7, outletPressure=80e5)
-fuelCoolingChannels = CoolingChannels(96, 1e-3, 1e-3, 1e-3, 365, 6e-6)
-fuelRegenCooling = RegenerativeCooling(sf2ThrustChamber, fuelCoolingChannels, solverParameters)
-fuelTurbine = Turbine(0.7, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
+fuelPump = Pump(isentropicEfficiency=0.7, outletPressure=80e5)
+fuelCoolingChannels = CoolingChannels(numberOfChannels=96, 
+                                    wallThickness=1e-3, 
+                                    midRibThickness=1e-3, 
+                                    channelHeight=1e-3, 
+                                    wallConductivity=365, 
+                                    wallRoughnessHeight=6e-6)
+fuelRegenCooling = RegenerativeCooling(thrustChamber=sf2ThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
+fuelTurbine = Turbine(isentropicEfficiency=0.7, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
 
 # Define the components on the oxidiser line
-oxPump = Pump(0.7, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
+oxPump = Pump(isentropicEfficiency=0.7, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
 
 # Define the lines with above components
-fuelLine = Line(fuelTank, sf2ThrustChamber.fuelMassFlowRate, [fuelPump, fuelRegenCooling, fuelTurbine])
-oxLine = Line(oxTank, sf2ThrustChamber.oxMassFlowRate, [oxPump])
+fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPump, fuelRegenCooling, fuelTurbine])
+oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPump])
 
 # Print selected results
 print("---")
@@ -72,4 +78,5 @@ print(f"Power Balance: {round((fuelTurbine.power - (fuelPump.power + oxPump.powe
 # Plot
 fig, ax = plt.subplots()
 ax.plot(sf2ThrustChamber.axialCoords[1:-1], fuelRegenCooling.heatFluxes[1:-1])
+#plt.axis("square")
 plt.show()
