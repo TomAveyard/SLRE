@@ -7,7 +7,7 @@ from PropTools.SubSystems.Body.airframe import Airframe
 from PropTools.FlightSimulation.flight import Flight
 from math import pi
 
-sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, CR=5, ambientPressure=0.7)
+sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, contractionRatio=5, ambientPressure=0.7)
 
 sf2ThrustChamber.getChamberGeometry(lStar=1.1,
                                     contractionLength=0.05, 

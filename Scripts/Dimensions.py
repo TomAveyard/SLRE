@@ -11,7 +11,7 @@ from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 import matplotlib.pyplot as plt
 
-testThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=30, fac=True, CR=5, ambientPressure=0.6)
+testThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=30, fac=True, contractionRatio=5, ambientPressure=0.6)
 
 testThrustChamber.getChamberGeometry(lStar=1.1,
                                      contractionLength=0.065, 

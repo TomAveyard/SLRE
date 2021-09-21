@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 plot = "heat flux"
 
-testThrustChamber = ThrustChamber(fuelName='methane', oxName='oxygen', thrust=20.5*10**3, chamberPressure=56, mixtureRatioOverride=3.5, fac=True, CR=7.5, ambientPressure=0.7)
+testThrustChamber = ThrustChamber(fuelName='methane', oxName='oxygen', thrust=20.5*10**3, chamberPressure=56, mixtureRatioOverride=3.5, fac=True, contractionRatio=7.5, ambientPressure=0.7)
 
 testThrustChamber.getChamberGeometry(lStar=2.25,
                                      contractionLength=0.065, 

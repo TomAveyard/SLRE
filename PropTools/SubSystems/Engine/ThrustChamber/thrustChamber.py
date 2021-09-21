@@ -20,7 +20,7 @@ class ThrustChamber:
                 mixtureRatioOverride: float = False, 
                 ambientPressure: float = 1.01325, 
                 fac: bool = False,
-                CR: float = 3,
+                contractionRatio: float = 3,
                 facPlenumPressureSpecified: bool = True,
                 mixtureRatioSearchResolution: float = 0.1, 
                 mixtureRatioSearchStart: float = 1, 
@@ -37,7 +37,7 @@ class ThrustChamber:
         self.ambientPressure = ambientPressure
 
         self.fac = fac
-        self.CR = CR
+        self.CR = contractionRatio
 
         # If a finite area combustor contraction ratio is specified and the chamber pressure given is the plenum/combustion pressure
         # then this estimates an injector face pressure for use in the calculations.
