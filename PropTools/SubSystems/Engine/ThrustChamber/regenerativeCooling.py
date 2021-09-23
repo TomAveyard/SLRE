@@ -1,3 +1,4 @@
+import sys
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
 from math import pi, sqrt
@@ -68,6 +69,10 @@ class ChannelDimensions:
         self.totalRibAngle = (360 * self.coolingChannels.midRibThickness * self.coolingChannels.numberOfChannels) / (2 * pi * self.midRadius)
         self.individualRibAngle = self.totalRibAngle / self.coolingChannels.numberOfChannels
         self.totalChannelAngle = 360 - self.totalRibAngle
+
+        if self.totalChannelAngle <= 0:
+            sys.exit("Error: Cooling channels are negative - aborting")
+
         self.individualChannelAngle = self.totalChannelAngle / self.coolingChannels.numberOfChannels
 
         self.bottomWidth = 2 * pi * self.bottomRadius * (self.individualChannelAngle / 360)
