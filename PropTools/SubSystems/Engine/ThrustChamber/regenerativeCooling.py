@@ -17,14 +17,14 @@ class CoolingChannels:
     def __init__(self,
         numberOfChannels: int = None,
         wallThickness: float = None,
-        midRibThickness: float = None,
+        ribThickness: float = None,
         channelHeight: float = None, 
         wallConductivity: float = None, 
         wallRoughnessHeight: float = None):
 
         self.numberOfChannels = numberOfChannels
         self.wallThickness = wallThickness
-        self.midRibThickness = midRibThickness
+        self.ribThickness = ribThickness
         self.channelHeight = channelHeight
         self.wallConductivity = wallConductivity
         self.wallRoughnessHeight = wallRoughnessHeight
@@ -66,7 +66,7 @@ class ChannelDimensions:
         self.midRadius = (self.bottomRadius + self.topRadius) / 2
         self.height = self.topRadius - self.bottomRadius
 
-        self.totalRibAngle = (360 * self.coolingChannels.midRibThickness * self.coolingChannels.numberOfChannels) / (2 * pi * self.midRadius)
+        self.totalRibAngle = (360 * self.coolingChannels.ribThickness * self.coolingChannels.numberOfChannels) / (2 * pi * self.bottomRadius)
         self.individualRibAngle = self.totalRibAngle / self.coolingChannels.numberOfChannels
         self.totalChannelAngle = 360 - self.totalRibAngle
 
@@ -79,12 +79,11 @@ class ChannelDimensions:
         self.topWidth = 2 * pi * self.topRadius * (self.individualChannelAngle / 360)
         self.midWidth = 2 * pi * self.midRadius * (self.individualChannelAngle / 360)
 
-        self.individualChannelArea = 0.5 * self.coolingChannels.channelHeight * (self.bottomWidth + self.topWidth)
+        self.individualChannelArea = 0.5 * self.height * (self.bottomWidth + self.topWidth)
 
         self.totalChannelArea = self.individualChannelArea * self.coolingChannels.numberOfChannels
 
-        self.sideLength = sqrt((((self.topWidth - self.bottomWidth) / 2) ** 2) + (self.height ** 2))
-        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.sideLength * 2)
+        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.height * 2)
         self.hydraulicDiameter = 4 * self.individualChannelArea / self.wettedPerimeter
 
         self.aspectRatio = self.height / self.midWidth
@@ -327,8 +326,8 @@ class RegenerativeCooling(Component):
                 # Apply fin correction if included
                 if self.solverParameters.includeFinCorrection:
 
-                    finEffectiveness = ht.finEffectiveness(coolantSideHeatTransferCoefficient, self.coolingChannels.midRibThickness, self.coolingChannels.wallConductivity, self.coolingChannels.channelHeight)
-                    coolantSideHeatTransferCoefficient = ht.applyFinEffectiveness(coolantSideHeatTransferCoefficient, finEffectiveness, self.coolingChannels.channelInstance.midWidth, self.coolingChannels.channelHeight, self.coolingChannels.midRibThickness)
+                    finEffectiveness = ht.finEffectiveness(coolantSideHeatTransferCoefficient, self.coolingChannels.ribThickness, self.coolingChannels.wallConductivity, self.coolingChannels.channelHeight)
+                    coolantSideHeatTransferCoefficient = ht.applyFinEffectiveness(coolantSideHeatTransferCoefficient, finEffectiveness, self.coolingChannels.channelInstance.midWidth, self.coolingChannels.channelHeight, self.coolingChannels.ribThickness)
 
                 heatFlux = (gasAdiabaticWallTemp - stationInletState.T) / ((1 / gasSideHeatTransferCoefficient) + (self.coolingChannels.wallThickness / self.coolingChannels.wallConductivity) + (1 / coolantSideHeatTransferCoefficient))
 

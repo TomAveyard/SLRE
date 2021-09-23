@@ -35,7 +35,7 @@ oxTank.defineState("T", 60, "P", 3*10**5)
 
 # Define the components on the fuel line
 fuelPump = Pump(isentropicEfficiency=0.7, outletPressure=105e5)
-fuelCoolingChannels = CoolingChannels(numberOfChannels=235, wallThickness=0.5e-3, midRibThickness=1.2e-3, channelHeight=12e-3, wallConductivity=365, wallRoughnessHeight=6e-6)
+fuelCoolingChannels = CoolingChannels(numberOfChannels=235, wallThickness=0.5e-3, ribThickness=1.2e-3, channelHeight=12e-3, wallConductivity=365, wallRoughnessHeight=6e-6)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=thrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
 fuelTurbine = Turbine(isentropicEfficiency=0.7, outletPressure=thrustChamber.injectionPressure*1e5)
 

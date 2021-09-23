@@ -39,7 +39,7 @@ oxTank.defineState("T", 60, "P", 3*10**5)
 fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=80e5)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=96, 
                                     wallThickness=1e-3, 
-                                    midRibThickness=1e-3, 
+                                    ribThickness=1e-3, 
                                     channelHeight=1e-3, 
                                     wallConductivity=365, 
                                     wallRoughnessHeight=6e-6)
