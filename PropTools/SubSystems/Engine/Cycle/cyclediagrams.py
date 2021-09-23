@@ -6,7 +6,7 @@ from math import ceil, floor
 
 class TSCycleDiagram:
 
-    def __init__(self, substance, states, SPadding=100, TPadding=10):
+    def __init__(self, substance: str, states: list, SPadding: float = 100, TPadding: float = 10):
 
         self.substance = substance
         self.states = states
@@ -39,7 +39,7 @@ class TSCycleDiagram:
         self.ax = self.fig.add_subplot(111)
 
     # Draws a line of constant pressure on the diagram
-    def constantPressureLine(self, pressure, resolution=50, colour='grey', lw=0.1):
+    def constantPressureLine(self, pressure: float, resolution: float = 50, colour: str = 'grey', lw: float = 0.1) -> None:
 
         xCoords = []
         yCoords = []
@@ -58,7 +58,7 @@ class TSCycleDiagram:
         self.ax.annotate(str(round(pressure, -4) / 1e5) + " [Bar]", xy=(lastCoord[0], lastCoord[1]), xycoords='data', xytext=(0, 5), textcoords='offset points', color='Gray', alpha=0.5, fontsize="xx-small")
 
     # Draws a saturation curve on the diagram
-    def saturationCurve(self):
+    def saturationCurve(self) -> None:
 
         xCoords = []
         yCoords = []
@@ -86,7 +86,7 @@ class TSCycleDiagram:
         self.ax.plot(xCoords, yCoords, color='black')
 
     # Plots the critical point on the diagram
-    def criticalPoint(self, s=2):
+    def criticalPoint(self, s: float = 2) -> None:
 
         state = Propellant(self.substance)
         state.defineState("T", state.Tcrit, "P", state.Pcrit)
@@ -95,7 +95,7 @@ class TSCycleDiagram:
         self.ax.annotate("Critical Point", xy=(state.S, state.T), xycoords='data', xytext=(0, 2), textcoords='offset points', color='Gray', alpha=0.5, fontsize="xx-small")
 
     # For a process that involves change in pressure, temperature, and entropy, this will plot through intermediate states in a linear fashion
-    def lineInterpolation(self, tempLims, pressureLims, resolution=1, colour='red', lw=2):
+    def lineInterpolation(self, tempLims: list, pressureLims: list, resolution: float = 1, colour: str = 'red', lw: float = 2) -> None:
 
         xCoords = []
         yCoords = []
@@ -120,7 +120,7 @@ class TSCycleDiagram:
         self.ax.plot(xCoords, yCoords, color=colour, lw=lw)
 
     # Draws the cycle
-    def drawCycle(self, constantPressureLines=True, saturationCurve=True, criticalPoint=True):
+    def plotCycle(self, constantPressureLines: bool = True, saturationCurve: bool = True, criticalPoint: bool = True):
         
         tankState = self.states[0]
         pumpState = self.states[1]
@@ -150,6 +150,8 @@ class TSCycleDiagram:
 
         self.ax.set_xlabel("Entropy [J K^-1]")
         self.ax.set_ylabel("Temperature [K]")
+
+        self.ax.set_xlim(right=self.SLims[-1])
 
         plt.show()
         

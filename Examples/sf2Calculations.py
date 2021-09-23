@@ -1,4 +1,4 @@
-from PropTools.SubSystems.Engine.Cycle.cycle import Line
+from PropTools.SubSystems.Engine.Cycle.cycle import Cycle, Line
 from PropTools.SubSystems.Engine.Turbopump.pump import Pump
 from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
@@ -7,12 +7,8 @@ from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChambe
 from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling, CoolingChannels
 import matplotlib.pyplot as plt
 
-# Modify parameters for the solver
-solverParameters = SolverParameters(bartzEquationCoefficient=0.023, coolantSideHeatTransferCorrelation="sieder tate")
-
 # Define thrust chamber
 sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, contractionRatio=5, ambientPressure=0.7)
-cea = sf2ThrustChamber.getCEAObject()
 
 # Define chamber geometry
 sf2ThrustChamber.getChamberGeometry(lStar=1.1,
@@ -27,6 +23,11 @@ sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=100
 
 # Get the thrust chamber coordinates
 sf2ThrustChamber.getThrustChamberCoords()
+
+#sf2ThrustChamber.plotGeometry()
+
+# Modify parameters for the solver
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.35, coolantSideHeatTransferCorrelation="sieder tate")
 
 # Define the states of the propellants in the tanks
 fuelTank = Propellant(sf2ThrustChamber.fuel.name)
@@ -52,6 +53,8 @@ oxPump = Pump(isentropicEfficiency=0.7, outletPressure=sf2ThrustChamber.injectio
 fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPump, fuelRegenCooling, fuelTurbine])
 oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPump])
 
+cycle = Cycle(fuelLine = fuelLine, oxLine = oxLine, thrustChamber = sf2ThrustChamber)
+
 # Print selected results
 print("---")
 print("Engine Performance")
@@ -73,10 +76,8 @@ print(f"Fuel Pump Power: {round(fuelPump.power/1e3, 2)} kW")
 print(f"Oxidiser Pump Power: {round(oxPump.power/1e3, 2)} kW")
 print(f"Total Pump Power: {round((fuelPump.power + oxPump.power)/1e3, 2)} kW")
 print(f"Turbine Power: {round(fuelTurbine.power/1e3, 2)} kW")
-print(f"Power Balance: {round((fuelTurbine.power - (fuelPump.power + oxPump.power))/1e3, 2)} kW")
+print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power + oxPump.power))/1e3, 2)} kW")
 
 # Plot
-fig, ax = plt.subplots()
-ax.plot(sf2ThrustChamber.axialCoords[1:-1], fuelRegenCooling.heatFluxes[1:-1])
-#plt.axis("square")
-plt.show()
+#fuelRegenCooling.plotHeatFlux()
+cycle.plotTSDiagram(fuelLine)

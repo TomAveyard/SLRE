@@ -7,6 +7,7 @@ from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.Thermo.dimensionlessNumbers import reynoldsNumber, prandtlNumber
 import PropTools.Thermo.heatTransfer as ht
 import PropTools.Thermo.fluidDynamics as fd
+import matplotlib.pyplot as plt
 
 # Class to store information about the cooling channel design
 # Channels are modelled as a sector of a annulus
@@ -397,3 +398,124 @@ class RegenerativeCooling(Component):
         print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
         print("Total Pressure Loss: " + str((self.outletState.P - self.inletState.P)/1e5) + " Bar")
+
+    def plotHeatFlux(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.heatFluxes[indexRange[0]:indexRange[1]]/1e6)
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Heat Flux [MW m^-2]")
+        ax.set_title("Thrust Chamber Heat Flux")
+
+        if show:
+            plt.show()
+
+    def plotAdiabaticWallTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.adiabaticWallTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Adiabatic Wall Temperature [K]")
+        ax.set_title("Thrust Chamber Adiabatic Wall Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotGasSideWallTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.gasSideWallTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Gas Side Wall Temperature [K]")
+        ax.set_title("Thrust Chamber Gas Side Wall Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantSideWallTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantSideWallTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Side Wall Temperature [K]")
+        ax.set_title("Thrust Chamber Coolant Side Wall Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantBulkTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantBulkTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Bulk Temperature [K]")
+        ax.set_title("Thrust Chamber Coolant Bulk Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantPressure(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantPressures[indexRange[0]:indexRange[1]]/1e5)
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Pressure [bar]")
+        ax.set_title("Thrust Chamber Coolant Pressure")
+        
+        if show:
+            plt.show()
+
+    def plotReynoldsNumber(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantReynoldsNumbers[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Reynolds Number")
+        ax.set_title("Thrust Chamber Coolant Reynolds Number")
+        
+        if show:
+            plt.show()
+
+    def plotPrandtlNumber(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantPrandtlNumbers[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Prandtl Number")
+        ax.set_title("Thrust Chamber Coolant Prandtl Number")
+        
+        if show:
+            plt.show()
+
+    def plotGasSideHeatTransferCoefficient(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.gasSideHeatTransferCoefficients[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Gas Side Heat Transfer Coefficient [W m^-1 K^-1]")
+        ax.set_title("Thrust Chamber Gas Side Heat Transfer Coefficient")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantSideHeatTransferCoefficient(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantSideHeatTransferCoefficients[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Side Heat Transfer Coefficient [W m^-1 K^-1]")
+        ax.set_title("Thrust Chamber Coolant Side Heat Transfer Coefficient")
+        
+        if show:
+            plt.show()
+    
+    def plotChannelAreas(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.channelAreas[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Cooling Channel Area [m^-2]")
+        ax.set_title("Thrust Chamber Cooling Channel Area")
+        
+        if show:
+            plt.show()

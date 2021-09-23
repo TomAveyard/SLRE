@@ -276,21 +276,25 @@ class ThrustChamber:
 
             self.getThrustChamberCoords()
             ax.plot(self.axialCoords, self.radialCoords, color=plotColor)
+            ax.set_title("Thrust Chamber Geometry")
 
         elif part.lower() == "combustion chamber":
 
             ax.plot(self.combustionChamber.axialCoords, self.combustionChamber.radialCoords, color=plotColor)
+            ax.set_title("Combustion Chamber Geometry")
 
         elif part.lower() == "nozzle":
 
             ax.plot(self.nozzle.axialCoords, self.nozzle.radialCoords, color=plotColor)
+            ax.set_title("Nozzle Geometry")
 
         else:
 
             sys.exit("Please give a valid part to plot")
 
         plt.axis('square')
-        plt.ylim(bottom=0)
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Radial Distance [m]")
 
         if show == True:
 
