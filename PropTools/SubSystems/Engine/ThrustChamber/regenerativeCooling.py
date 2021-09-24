@@ -269,7 +269,6 @@ class RegenerativeCooling(Component):
                 coolantSideWallTemp = newCoolantSideWallTemp
 
                 gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, chamberViscosity, chamberSpecificHeat, chamberPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=self.solverParameters.bartzEquationCoefficient)
-
                 stationSurfaceState.defineState("T", coolantSideWallTemp, "P", stationOutletState.P)
 
                 # Get nusselt number using chosen correlation

@@ -27,7 +27,7 @@ sf2ThrustChamber.getThrustChamberCoords()
 #sf2ThrustChamber.plotGeometry()
 
 # Modify parameters for the solver
-solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.35, coolantSideHeatTransferCorrelation="sieder tate")
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.3, coolantSideHeatTransferCorrelation="sieder tate")
 
 # Define the states of the propellants in the tanks
 fuelTank = Propellant(sf2ThrustChamber.fuel.name)
@@ -37,7 +37,7 @@ oxTank.defineState("T", 60, "P", 3*10**5)
 
 # Define the components on the fuel line
 fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=80e5)
-fuelCoolingChannels = CoolingChannels(numberOfChannels=96, 
+fuelCoolingChannels = CoolingChannels(numberOfChannels=30, 
                                     wallThickness=1e-3, 
                                     ribThickness=1e-3, 
                                     channelHeight=1e-3, 
@@ -79,5 +79,4 @@ print(f"Turbine Power: {round(fuelTurbine.power/1e3, 2)} kW")
 print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power + oxPump.power))/1e3, 2)} kW")
 
 # Plot
-fuelRegenCooling.plotHeatFlux()
-#cycle.plotTSDiagram(fuelLine)
+cycle.plotTSDiagram(fuelLine)
