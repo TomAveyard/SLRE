@@ -9,7 +9,7 @@ def bartzEquation(throatDiameter: float, viscosity: float, specificHeat: float, 
 
         firstBracket = C1 / (throatDiameter ** 0.2)
         secondBracket = (((viscosity ** 0.2) * specificHeat) / (prandtlNumber ** 0.6))
-        thirdBracket = ((chamberPressure) / cStar) ** 0.8
+        thirdBracket = ((chamberPressure) / (cStar)) ** 0.8
 
         # If a throat average radius of curvature is given, the correction is applied
         if throatAverageRadiusOfCurvature != None:

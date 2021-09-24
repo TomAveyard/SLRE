@@ -1,3 +1,4 @@
+import sys
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
 from math import pi, sqrt
@@ -7,6 +8,7 @@ from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.Thermo.dimensionlessNumbers import reynoldsNumber, prandtlNumber
 import PropTools.Thermo.heatTransfer as ht
 import PropTools.Thermo.fluidDynamics as fd
+import matplotlib.pyplot as plt
 
 # Class to store information about the cooling channel design
 # Channels are modelled as a sector of a annulus
@@ -15,14 +17,14 @@ class CoolingChannels:
     def __init__(self,
         numberOfChannels: int = None,
         wallThickness: float = None,
-        midRibThickness: float = None,
+        ribThickness: float = None,
         channelHeight: float = None, 
         wallConductivity: float = None, 
         wallRoughnessHeight: float = None):
 
         self.numberOfChannels = numberOfChannels
         self.wallThickness = wallThickness
-        self.midRibThickness = midRibThickness
+        self.ribThickness = ribThickness
         self.channelHeight = channelHeight
         self.wallConductivity = wallConductivity
         self.wallRoughnessHeight = wallRoughnessHeight
@@ -64,21 +66,24 @@ class ChannelDimensions:
         self.midRadius = (self.bottomRadius + self.topRadius) / 2
         self.height = self.topRadius - self.bottomRadius
 
-        self.totalRibAngle = (360 * self.coolingChannels.midRibThickness * self.coolingChannels.numberOfChannels) / (2 * pi * self.midRadius)
+        self.totalRibAngle = (360 * self.coolingChannels.ribThickness * self.coolingChannels.numberOfChannels) / (2 * pi * self.bottomRadius)
         self.individualRibAngle = self.totalRibAngle / self.coolingChannels.numberOfChannels
         self.totalChannelAngle = 360 - self.totalRibAngle
+
+        if self.totalChannelAngle <= 0:
+            sys.exit("Error: Cooling channels are negative - aborting")
+
         self.individualChannelAngle = self.totalChannelAngle / self.coolingChannels.numberOfChannels
 
         self.bottomWidth = 2 * pi * self.bottomRadius * (self.individualChannelAngle / 360)
         self.topWidth = 2 * pi * self.topRadius * (self.individualChannelAngle / 360)
         self.midWidth = 2 * pi * self.midRadius * (self.individualChannelAngle / 360)
 
-        self.individualChannelArea = 0.5 * self.coolingChannels.channelHeight * (self.bottomWidth + self.topWidth)
+        self.individualChannelArea = 0.5 * self.height * (self.bottomWidth + self.topWidth)
 
         self.totalChannelArea = self.individualChannelArea * self.coolingChannels.numberOfChannels
 
-        self.sideLength = sqrt((((self.topWidth - self.bottomWidth) / 2) ** 2) + (self.height ** 2))
-        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.sideLength * 2)
+        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.height * 2)
         self.hydraulicDiameter = 4 * self.individualChannelArea / self.wettedPerimeter
 
         self.aspectRatio = self.height / self.midWidth
@@ -264,7 +269,6 @@ class RegenerativeCooling(Component):
                 coolantSideWallTemp = newCoolantSideWallTemp
 
                 gasSideHeatTransferCoefficient = ht.bartzEquation(throatDiameter, chamberViscosity, chamberSpecificHeat, chamberPrandtlNumber, chamberPressure, chamberTemp, cStar, stationArea, gasSideWallTemp, gasMachNumber, gasGamma, C1=self.solverParameters.bartzEquationCoefficient)
-
                 stationSurfaceState.defineState("T", coolantSideWallTemp, "P", stationOutletState.P)
 
                 # Get nusselt number using chosen correlation
@@ -321,8 +325,8 @@ class RegenerativeCooling(Component):
                 # Apply fin correction if included
                 if self.solverParameters.includeFinCorrection:
 
-                    finEffectiveness = ht.finEffectiveness(coolantSideHeatTransferCoefficient, self.coolingChannels.midRibThickness, self.coolingChannels.wallConductivity, self.coolingChannels.channelHeight)
-                    coolantSideHeatTransferCoefficient = ht.applyFinEffectiveness(coolantSideHeatTransferCoefficient, finEffectiveness, self.coolingChannels.channelInstance.midWidth, self.coolingChannels.channelHeight, self.coolingChannels.midRibThickness)
+                    finEffectiveness = ht.finEffectiveness(coolantSideHeatTransferCoefficient, self.coolingChannels.ribThickness, self.coolingChannels.wallConductivity, self.coolingChannels.channelHeight)
+                    coolantSideHeatTransferCoefficient = ht.applyFinEffectiveness(coolantSideHeatTransferCoefficient, finEffectiveness, self.coolingChannels.channelInstance.midWidth, self.coolingChannels.channelHeight, self.coolingChannels.ribThickness)
 
                 heatFlux = (gasAdiabaticWallTemp - stationInletState.T) / ((1 / gasSideHeatTransferCoefficient) + (self.coolingChannels.wallThickness / self.coolingChannels.wallConductivity) + (1 / coolantSideHeatTransferCoefficient))
 
@@ -397,3 +401,124 @@ class RegenerativeCooling(Component):
         print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
         print("Total Pressure Loss: " + str((self.outletState.P - self.inletState.P)/1e5) + " Bar")
+
+    def plotHeatFlux(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.heatFluxes[indexRange[0]:indexRange[1]]/1e6)
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Heat Flux [MW m^-2]")
+        ax.set_title("Thrust Chamber Heat Flux")
+
+        if show:
+            plt.show()
+
+    def plotAdiabaticWallTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.adiabaticWallTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Adiabatic Wall Temperature [K]")
+        ax.set_title("Thrust Chamber Adiabatic Wall Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotGasSideWallTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.gasSideWallTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Gas Side Wall Temperature [K]")
+        ax.set_title("Thrust Chamber Gas Side Wall Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantSideWallTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantSideWallTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Side Wall Temperature [K]")
+        ax.set_title("Thrust Chamber Coolant Side Wall Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantBulkTemp(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantBulkTemps[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Bulk Temperature [K]")
+        ax.set_title("Thrust Chamber Coolant Bulk Temperature")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantPressure(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantPressures[indexRange[0]:indexRange[1]]/1e5)
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Pressure [bar]")
+        ax.set_title("Thrust Chamber Coolant Pressure")
+        
+        if show:
+            plt.show()
+
+    def plotReynoldsNumber(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantReynoldsNumbers[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Reynolds Number")
+        ax.set_title("Thrust Chamber Coolant Reynolds Number")
+        
+        if show:
+            plt.show()
+
+    def plotPrandtlNumber(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantPrandtlNumbers[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Prandtl Number")
+        ax.set_title("Thrust Chamber Coolant Prandtl Number")
+        
+        if show:
+            plt.show()
+
+    def plotGasSideHeatTransferCoefficient(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.gasSideHeatTransferCoefficients[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Gas Side Heat Transfer Coefficient [W m^-1 K^-1]")
+        ax.set_title("Thrust Chamber Gas Side Heat Transfer Coefficient")
+        
+        if show:
+            plt.show()
+
+    def plotCoolantSideHeatTransferCoefficient(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.coolantSideHeatTransferCoefficients[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Coolant Side Heat Transfer Coefficient [W m^-1 K^-1]")
+        ax.set_title("Thrust Chamber Coolant Side Heat Transfer Coefficient")
+        
+        if show:
+            plt.show()
+    
+    def plotChannelAreas(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
+
+        fig, ax = plt.subplots()
+        ax.plot(self.thrustChamber.axialCoords[indexRange[0]:indexRange[1]], self.channelAreas[indexRange[0]:indexRange[1]])
+        ax.set_xlabel("Axial Distance [m]")
+        ax.set_ylabel("Cooling Channel Area [m^-2]")
+        ax.set_title("Thrust Chamber Cooling Channel Area")
+        
+        if show:
+            plt.show()

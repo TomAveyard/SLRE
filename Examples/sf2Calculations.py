@@ -1,4 +1,4 @@
-from PropTools.SubSystems.Engine.Cycle.cycle import Line
+from PropTools.SubSystems.Engine.Cycle.cycle import Cycle, Line
 from PropTools.SubSystems.Engine.Turbopump.pump import Pump
 from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
@@ -7,12 +7,8 @@ from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChambe
 from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling, CoolingChannels
 import matplotlib.pyplot as plt
 
-# Modify parameters for the solver
-solverParameters = SolverParameters(bartzEquationCoefficient=0.023, coolantSideHeatTransferCorrelation="sieder tate")
-
 # Define thrust chamber
 sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, contractionRatio=5, ambientPressure=0.7)
-cea = sf2ThrustChamber.getCEAObject()
 
 # Define chamber geometry
 sf2ThrustChamber.getChamberGeometry(lStar=1.1,
@@ -28,6 +24,11 @@ sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=100
 # Get the thrust chamber coordinates
 sf2ThrustChamber.getThrustChamberCoords()
 
+#sf2ThrustChamber.plotGeometry()
+
+# Modify parameters for the solver
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.3, coolantSideHeatTransferCorrelation="sieder tate")
+
 # Define the states of the propellants in the tanks
 fuelTank = Propellant(sf2ThrustChamber.fuel.name)
 fuelTank.defineState("T", 298, "P", 3*10**5)
@@ -35,22 +36,24 @@ oxTank = Propellant(sf2ThrustChamber.ox.name)
 oxTank.defineState("T", 60, "P", 3*10**5)
 
 # Define the components on the fuel line
-fuelPump = Pump(isentropicEfficiency=0.7, outletPressure=80e5)
-fuelCoolingChannels = CoolingChannels(numberOfChannels=96, 
+fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=80e5)
+fuelCoolingChannels = CoolingChannels(numberOfChannels=30, 
                                     wallThickness=1e-3, 
-                                    midRibThickness=1e-3, 
+                                    ribThickness=1e-3, 
                                     channelHeight=1e-3, 
                                     wallConductivity=365, 
                                     wallRoughnessHeight=6e-6)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=sf2ThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
-fuelTurbine = Turbine(isentropicEfficiency=0.7, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
+fuelTurbine = Turbine(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
 
 # Define the components on the oxidiser line
-oxPump = Pump(isentropicEfficiency=0.7, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
+oxPump = Pump(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
 
 # Define the lines with above components
 fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPump, fuelRegenCooling, fuelTurbine])
 oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPump])
+
+cycle = Cycle(fuelLine = fuelLine, oxLine = oxLine, thrustChamber = sf2ThrustChamber)
 
 # Print selected results
 print("---")
@@ -73,10 +76,7 @@ print(f"Fuel Pump Power: {round(fuelPump.power/1e3, 2)} kW")
 print(f"Oxidiser Pump Power: {round(oxPump.power/1e3, 2)} kW")
 print(f"Total Pump Power: {round((fuelPump.power + oxPump.power)/1e3, 2)} kW")
 print(f"Turbine Power: {round(fuelTurbine.power/1e3, 2)} kW")
-print(f"Power Balance: {round((fuelTurbine.power - (fuelPump.power + oxPump.power))/1e3, 2)} kW")
+print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power + oxPump.power))/1e3, 2)} kW")
 
 # Plot
-fig, ax = plt.subplots()
-ax.plot(sf2ThrustChamber.axialCoords[1:-1], fuelRegenCooling.heatFluxes[1:-1])
-#plt.axis("square")
-plt.show()
+cycle.plotTSDiagram(fuelLine)

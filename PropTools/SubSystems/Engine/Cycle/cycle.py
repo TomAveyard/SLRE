@@ -6,6 +6,7 @@ from PropTools.SubSystems.Engine.Turbopump.pump import Pump
 from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import RegenerativeCooling
+from PropTools.SubSystems.Engine.Cycle.cyclediagrams import TSCycleDiagram
 
 class Line:
 
@@ -72,10 +73,10 @@ class Cycle:
 
         self.powerBalance = self.turbinePower + self.pumpPower
 
-        print("---")
-        print("Total Pump Power: " + str(self.pumpPower) + " W")
-        print("Total Turbine Power: " + str(self.turbinePower) + " W")
-        print("Cycle Power Balance: " + str(self.powerBalance) + " W")
+    def plotTSDiagram(self, line: Line, SPadding: float = 100, TPadding: float = 10, includeConstantPressureLines: bool = True, includeSaturationCurve: bool = True, includeCriticalPoint: bool = True) -> None:
+
+        plotter = TSCycleDiagram(line.inletState.name, line.states, SPadding=SPadding, TPadding=TPadding)
+        plotter.plotCycle(constantPressureLines=includeConstantPressureLines, saturationCurve=includeSaturationCurve, criticalPoint=includeCriticalPoint)
 
         
 
