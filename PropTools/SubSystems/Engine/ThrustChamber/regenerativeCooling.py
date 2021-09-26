@@ -1,7 +1,7 @@
 import sys
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import pi, sqrt
+from math import pi, sqrt, sin, radians
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
 from PropTools.SubSystems.Engine.Cycle.component import Component
@@ -9,84 +9,8 @@ from PropTools.Thermo.dimensionlessNumbers import reynoldsNumber, prandtlNumber
 import PropTools.Thermo.heatTransfer as ht
 import PropTools.Thermo.fluidDynamics as fd
 import matplotlib.pyplot as plt
-
-# Class to store information about the cooling channel design
-# Channels are modelled as a sector of a annulus
-class CoolingChannels:
-
-    def __init__(self,
-        numberOfChannels: int = None,
-        wallThickness: float = None,
-        ribThickness: float = None,
-        channelHeight: float = None, 
-        wallConductivity: float = None, 
-        wallRoughnessHeight: float = None):
-
-        self.numberOfChannels = numberOfChannels
-        self.wallThickness = wallThickness
-        self.ribThickness = ribThickness
-        self.channelHeight = channelHeight
-        self.wallConductivity = wallConductivity
-        self.wallRoughnessHeight = wallRoughnessHeight
-
-        self.channelInstance = ChannelDimensions(self)
-
-
-# Class to store the dimensions of a single instance of the cooling channels at a certain area
-class ChannelDimensions:
-
-    def __init__(self, coolingChannels: CoolingChannels = None):
-
-        self.coolingChannels = coolingChannels
-
-        self.bottomWidth = None
-        self.midWidth = None
-        self.topWidth = None
-        self.bottomRadius = None
-        self.midRadius = None
-        self.topRadius = None
-        self.totalChannelAngle = None
-        self.individualChannelAngle = None
-        self.totalRibAngle = None
-        self.individualRibAngle = None
-        self.thrustChamberRadius = None
-        self.individualChannelArea = None
-        self.totalChannelArea = None
-        self.sideLength = None
-        self.wettedPerimeter = None
-        self.hydraulicDiameter = None
-        self.aspectRatio = None
-
-    def getChannelDimensions(self, thrustChamberArea: float = None) -> None:
-
-        self.thrustChamberRadius = sqrt(thrustChamberArea / pi)
-
-        self.bottomRadius = self.thrustChamberRadius + self.coolingChannels.wallThickness
-        self.topRadius = self.bottomRadius + self.coolingChannels.channelHeight
-        self.midRadius = (self.bottomRadius + self.topRadius) / 2
-        self.height = self.topRadius - self.bottomRadius
-
-        self.totalRibAngle = (360 * self.coolingChannels.ribThickness * self.coolingChannels.numberOfChannels) / (2 * pi * self.bottomRadius)
-        self.individualRibAngle = self.totalRibAngle / self.coolingChannels.numberOfChannels
-        self.totalChannelAngle = 360 - self.totalRibAngle
-
-        if self.totalChannelAngle <= 0:
-            sys.exit("Error: Cooling channels are negative - aborting")
-
-        self.individualChannelAngle = self.totalChannelAngle / self.coolingChannels.numberOfChannels
-
-        self.bottomWidth = 2 * pi * self.bottomRadius * (self.individualChannelAngle / 360)
-        self.topWidth = 2 * pi * self.topRadius * (self.individualChannelAngle / 360)
-        self.midWidth = 2 * pi * self.midRadius * (self.individualChannelAngle / 360)
-
-        self.individualChannelArea = 0.5 * self.height * (self.bottomWidth + self.topWidth)
-
-        self.totalChannelArea = self.individualChannelArea * self.coolingChannels.numberOfChannels
-
-        self.wettedPerimeter = self.bottomWidth + self.topWidth + (self.height * 2)
-        self.hydraulicDiameter = 4 * self.individualChannelArea / self.wettedPerimeter
-
-        self.aspectRatio = self.height / self.midWidth
+from PropTools.SubSystems.Engine.ThrustChamber.coolingChannels import CoolingChannels
+from PropTools.Utils.helixGeometry import Helix
 
 
 class SolverParameters:
@@ -339,7 +263,7 @@ class RegenerativeCooling(Component):
             coolantSideWallTemp = newCoolantSideWallTemp
 
             # Calculate length of the station
-            stationLength = distanceBetweenTwoPoints([stationAxialCoord, stationRadialCoord], [self.thrustChamber.axialCoords[station-1], self.thrustChamber.radialCoords[station-1]])
+            stationLength = distanceBetweenTwoPoints([stationAxialCoord, stationRadialCoord], [self.thrustChamber.axialCoords[station-1], self.thrustChamber.radialCoords[station-1]]) / sin(radians(self.coolingChannels.helixAngle))
             distance += stationLength
 
             # Calculate temperature change over the station
@@ -401,6 +325,16 @@ class RegenerativeCooling(Component):
         print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
         print("Total Pressure Loss: " + str((self.outletState.P - self.inletState.P)/1e5) + " Bar")
+
+    def plotChannels(self, plotAll: bool = True, includeThrustChamberContour: bool = False, lineWidth: float = 1):
+
+        geometry = Helix(self.thrustChamber.axialCoords, self.thrustChamber.radialCoords, self.coolingChannels.helixAngle)
+        if  plotAll:
+            numberOfChannels = self.coolingChannels.numberOfChannels
+        else:
+            numberOfChannels = 1
+        
+        geometry.plotHelix(include2DContour=includeThrustChamberContour, numberOfChannels=numberOfChannels, lw=lineWidth)
 
     def plotHeatFlux(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
 

@@ -27,7 +27,7 @@ sf2ThrustChamber.getThrustChamberCoords()
 #sf2ThrustChamber.plotGeometry()
 
 # Modify parameters for the solver
-solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.3, coolantSideHeatTransferCorrelation="sieder tate")
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.2, coolantSideHeatTransferCorrelation="sieder tate")
 
 # Define the states of the propellants in the tanks
 fuelTank = Propellant(sf2ThrustChamber.fuel.name)
@@ -36,13 +36,14 @@ oxTank = Propellant(sf2ThrustChamber.ox.name)
 oxTank.defineState("T", 60, "P", 3*10**5)
 
 # Define the components on the fuel line
-fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=80e5)
+fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=90e5)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=30, 
                                     wallThickness=1e-3, 
                                     ribThickness=1e-3, 
-                                    channelHeight=1e-3, 
+                                    channelHeight=2e-3, 
                                     wallConductivity=365, 
-                                    wallRoughnessHeight=6e-6)
+                                    wallRoughnessHeight=6e-6,
+                                    helixAngle=20)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=sf2ThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
 fuelTurbine = Turbine(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
 
@@ -67,7 +68,7 @@ print(f"Max Heat Flux: {round(max(fuelRegenCooling.heatFluxes/1e3), 2)} kW")
 print(f"Max Wall Temp: {round(max(fuelRegenCooling.gasSideWallTemps), 2)} K")
 print(f"Coolant Temp Rise: {round(fuelRegenCooling.coolantBulkTemps[-1] - fuelRegenCooling.coolantBulkTemps[0], 2)} K")
 print(f"Coolant Outlet Temp: {round(fuelRegenCooling.coolantBulkTemps[-1], 2)} K")
-print(f"Coolant Pressure Drop: {round((fuelRegenCooling.coolantPressures[-1] - fuelRegenCooling.coolantPressures[0]) / 1e5, 2)} Bar")
+print(f"Coolant Pressure Drop: {round((fuelRegenCooling.coolantPressures[-1] - fuelRegenCooling.coolantPressures[1]) / 1e5, 2)} Bar")
 print("---")
 print("Power Balance")
 print("---")
@@ -79,4 +80,6 @@ print(f"Turbine Power: {round(fuelTurbine.power/1e3, 2)} kW")
 print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power + oxPump.power))/1e3, 2)} kW")
 
 # Plot
+fuelRegenCooling.plotChannels()
+fuelRegenCooling.plotGasSideWallTemp()
 cycle.plotTSDiagram(fuelLine)
