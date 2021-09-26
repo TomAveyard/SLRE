@@ -35,7 +35,7 @@ solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.2, coolantS
 
 testFuelTank = Tank(fuel)
 testFuelPump = Pump(isentropicEfficiency=0.7, outletPressure=150e5)
-testCoolingChannels = CoolingChannels(numberOfChannels=96, wallThickness=0.9e-3, ribThickness=1.5e-3, channelHeight=1.25e-3, wallConductivity=365, wallRoughnessHeight=0)
+testCoolingChannels = CoolingChannels(numberOfChannels=96, wallThickness=0.9e-3, ribThickness=1.5e-3, channelHeight=1.25e-3, wallConductivity=365, wallRoughnessHeight=0, helixAngle=90)
 testRegenerativeCooling = RegenerativeCooling(thrustChamber=testThrustChamber, coolingChannels=testCoolingChannels, solverParameters=solverParameters)
 testTurbine = Turbine(isentropicEfficiency=0.7, outletPressure=testThrustChamber.injectionPressure*10**5)
 

@@ -40,7 +40,7 @@ fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=90e5)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=30, 
                                     wallThickness=1e-3, 
                                     ribThickness=1e-3, 
-                                    channelHeight=1e-3, 
+                                    channelHeight=2e-3, 
                                     wallConductivity=365, 
                                     wallRoughnessHeight=6e-6,
                                     helixAngle=20)
@@ -68,7 +68,7 @@ print(f"Max Heat Flux: {round(max(fuelRegenCooling.heatFluxes/1e3), 2)} kW")
 print(f"Max Wall Temp: {round(max(fuelRegenCooling.gasSideWallTemps), 2)} K")
 print(f"Coolant Temp Rise: {round(fuelRegenCooling.coolantBulkTemps[-1] - fuelRegenCooling.coolantBulkTemps[0], 2)} K")
 print(f"Coolant Outlet Temp: {round(fuelRegenCooling.coolantBulkTemps[-1], 2)} K")
-print(f"Coolant Pressure Drop: {round((fuelRegenCooling.coolantPressures[-1] - fuelRegenCooling.coolantPressures[0]) / 1e5, 2)} Bar")
+print(f"Coolant Pressure Drop: {round((fuelRegenCooling.coolantPressures[-1] - fuelRegenCooling.coolantPressures[1]) / 1e5, 2)} Bar")
 print("---")
 print("Power Balance")
 print("---")
@@ -80,4 +80,5 @@ print(f"Turbine Power: {round(fuelTurbine.power/1e3, 2)} kW")
 print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power + oxPump.power))/1e3, 2)} kW")
 
 # Plot
+fuelRegenCooling.plotGasSideWallTemp()
 cycle.plotTSDiagram(fuelLine)
