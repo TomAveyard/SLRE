@@ -86,7 +86,7 @@ testChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=1000)
 testChamber.getChamberGeometry(lStar=1.1, contractionLength=0.1, numberOfPointsConverging=300, numberOfPointsStraight=500)
 testChamber.getThrustChamberCoords()
 
-test = Helix(axialCoords=testChamber.axialCoords, radialCoords=testChamber.radialCoords, helixAngle=30)
+test = Helix(axialCoords=testChamber.axialCoords, radialCoords=testChamber.radialCoords, helixAngle=90)
 
 test.plotHelix(numberOfChannels=96)
 

@@ -1,7 +1,7 @@
 import sys
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 import numpy as np
-from math import pi, sqrt
+from math import pi, sqrt, sin, radians
 from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.mathsUtils import radiusToArea, distanceBetweenTwoPoints
 from PropTools.SubSystems.Engine.Cycle.component import Component
@@ -20,7 +20,8 @@ class CoolingChannels:
         ribThickness: float = None,
         channelHeight: float = None, 
         wallConductivity: float = None, 
-        wallRoughnessHeight: float = None):
+        wallRoughnessHeight: float = None,
+        helixAngle: float = 90):
 
         self.numberOfChannels = numberOfChannels
         self.wallThickness = wallThickness
@@ -28,6 +29,7 @@ class CoolingChannels:
         self.channelHeight = channelHeight
         self.wallConductivity = wallConductivity
         self.wallRoughnessHeight = wallRoughnessHeight
+        self.helixAngle = helixAngle
 
         self.channelInstance = ChannelDimensions(self)
 
@@ -339,7 +341,7 @@ class RegenerativeCooling(Component):
             coolantSideWallTemp = newCoolantSideWallTemp
 
             # Calculate length of the station
-            stationLength = distanceBetweenTwoPoints([stationAxialCoord, stationRadialCoord], [self.thrustChamber.axialCoords[station-1], self.thrustChamber.radialCoords[station-1]])
+            stationLength = distanceBetweenTwoPoints([stationAxialCoord, stationRadialCoord], [self.thrustChamber.axialCoords[station-1], self.thrustChamber.radialCoords[station-1]]) / sin(radians(self.coolingChannels.helixAngle))
             distance += stationLength
 
             # Calculate temperature change over the station
