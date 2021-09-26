@@ -80,5 +80,6 @@ print(f"Turbine Power: {round(fuelTurbine.power/1e3, 2)} kW")
 print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power + oxPump.power))/1e3, 2)} kW")
 
 # Plot
+fuelRegenCooling.plotChannels()
 fuelRegenCooling.plotGasSideWallTemp()
 cycle.plotTSDiagram(fuelLine)

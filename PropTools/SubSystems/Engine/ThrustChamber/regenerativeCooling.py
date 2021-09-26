@@ -10,6 +10,7 @@ import PropTools.Thermo.heatTransfer as ht
 import PropTools.Thermo.fluidDynamics as fd
 import matplotlib.pyplot as plt
 from PropTools.SubSystems.Engine.ThrustChamber.coolingChannels import CoolingChannels
+from PropTools.Utils.helixGeometry import Helix
 
 
 class SolverParameters:
@@ -324,6 +325,16 @@ class RegenerativeCooling(Component):
         print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
         print("Total Heat Power: " + str(self.totalHeatPower))
         print("Total Pressure Loss: " + str((self.outletState.P - self.inletState.P)/1e5) + " Bar")
+
+    def plotChannels(self, plotAll: bool = True, includeThrustChamberContour: bool = False, lineWidth: float = 1):
+
+        geometry = Helix(self.thrustChamber.axialCoords, self.thrustChamber.radialCoords, self.coolingChannels.helixAngle)
+        if  plotAll:
+            numberOfChannels = self.coolingChannels.numberOfChannels
+        else:
+            numberOfChannels = 1
+        
+        geometry.plotHelix(include2DContour=includeThrustChamberContour, numberOfChannels=numberOfChannels, lw=lineWidth)
 
     def plotHeatFlux(self, show: bool = True, save: bool = False, indexRange: list = [1, -1]) -> None:
 

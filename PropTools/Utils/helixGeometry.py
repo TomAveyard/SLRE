@@ -1,13 +1,11 @@
 import matplotlib.pyplot as plt
-from matplotlib import cm
-from math import degrees, sin, cos, tan, sqrt, radians, pi
+from math import sin, cos, tan, sqrt, radians, pi
 import numpy as np
-from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
 from PropTools.Utils.mathsUtils import rotatePoint
 
 class Helix:
 
-    def __init__(self, axialCoords:list = None, radialCoords: list = None, helixAngle: float = 15, startingAngle: float = 0):
+    def __init__(self, axialCoords:list = None, radialCoords: list = None, helixAngle: float = None, startingAngle: float = 0):
         
         self.axialCoords = axialCoords
         self.radialCoords = radialCoords
@@ -81,14 +79,6 @@ class Helix:
         ax.axes.set_zlim3d(bottom=axialLims[0], top=axialLims[1]) 
         plt.show()
 
-testChamber = ThrustChamber(fuelName="methane", oxName="oxygen", thrust=10*10**3, chamberPressure=35, mixtureRatioOverride=3.5, fac=True, contractionRatio=5, ambientPressure=0.2)
-testChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=1000)
-testChamber.getChamberGeometry(lStar=1.1, contractionLength=0.1, numberOfPointsConverging=300, numberOfPointsStraight=500)
-testChamber.getThrustChamberCoords()
-
-test = Helix(axialCoords=testChamber.axialCoords, radialCoords=testChamber.radialCoords, helixAngle=90)
-
-test.plotHelix(numberOfChannels=96)
 
 
 

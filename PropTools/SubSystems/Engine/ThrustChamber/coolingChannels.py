@@ -1,4 +1,8 @@
 from math import pi, sqrt
+
+from matplotlib.pyplot import plot
+from PropTools.SubSystems.Engine.ThrustChamber.thrustChamber import ThrustChamber
+from PropTools.Utils.helixGeometry import Helix
 import sys
 
 # Class to store information about the cooling channel design
