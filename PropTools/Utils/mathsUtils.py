@@ -1,5 +1,5 @@
 import sys
-from math import pi, sqrt
+from math import pi, sqrt, cos, sin, radians
 
 def areaToRadius(area: float) -> float:
 
@@ -172,4 +172,15 @@ def radiusOfCurvature3Points2D(point1: list, point2: list, point3: list, returnC
 
     except:
         return None, None
+
+# Rotates point anticlockwise around a given origin by a given angle
+def rotatePoint(point: list, origin: list, angle: float):
+
+    angle = radians(angle)
+
+    newX = origin[0] + cos(angle) * (point[0] - origin[0]) - sin(angle) * (point[1] - origin[1])
+    newY = origin[1] + sin(angle) * (point[0] - origin[0]) + cos(angle) * (point[1] - origin[1])
+
+    return newX, newY
+
 
