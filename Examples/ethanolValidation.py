@@ -8,7 +8,7 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 import matplotlib.pyplot as plt
 
 # Modify parameters for the solver
-solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.366, coolantSideHeatTransferCorrelation="sieder tate")
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideHeatTransferCorrelation="sieder tate")
 
 # Define thrust chamber
 thrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=1012.5*10**3, chamberPressure=70, mixtureRatioOverride=1.8, fac=True, contractionRatio=3, ambientPressure=0.323)
