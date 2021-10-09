@@ -31,7 +31,7 @@ ox = Propellant(testThrustChamber.ox.name)
 
 fuel.defineState("T", 108, "P", 3*10**5)
 
-solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.2, coolantSideHeatTransferCorrelation="dittus-boelter", includeRoughnessCorrection=False)
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.15, coolantSideHeatTransferCorrelation="dittus-boelter", includeRoughnessCorrection=False)
 
 testFuelTank = Tank(fuel)
 testFuelPump = Pump(isentropicEfficiency=0.7, outletPressure=150e5)
@@ -41,7 +41,7 @@ testTurbine = Turbine(isentropicEfficiency=0.7, outletPressure=testThrustChamber
 
 testFuelLine = Line(inletState=testFuelTank.outletState, massFlowRate=testThrustChamber.fuelMassFlowRate, components=[testFuelPump, testRegenerativeCooling, testTurbine])
 
-testRegenerativeCooling.plotCoolantBulkTemp()
+testRegenerativeCooling.plotHeatFlux()
 
 ox.defineState("T", 60, "P", 3*10**5)
 

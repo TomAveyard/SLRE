@@ -1,4 +1,5 @@
 from math import sqrt
+from os import name
 import sys
 from matplotlib import pyplot as plt
 from rocketcea.cea_obj_w_units import CEA_Obj
@@ -25,7 +26,8 @@ class ThrustChamber:
                 mixtureRatioSearchResolution: float = 0.1, 
                 mixtureRatioSearchStart: float = 1, 
                 condition: str = 'equilibrium', 
-                throatCondition: str = 'equilibrium'):
+                throatCondition: str = 'equilibrium'
+                ):
 
         self.fuel = Propellant(fuelName)
         self.ox = Propellant(oxName)
@@ -214,8 +216,8 @@ class ThrustChamber:
     def getMassFlowRate(self) -> None:
 
         self.propellantMassFlowRate = self.thrust / (self.specificImpulse * G)
-        self.fuelMassFlowRate = self.propellantMassFlowRate * (1 / self.mixtureRatio)
-        self.oxMassFlowRate = self.propellantMassFlowRate * self.mixtureRatio
+        self.fuelMassFlowRate = self.propellantMassFlowRate / (self.mixtureRatio + 1)
+        self.oxMassFlowRate = self.propellantMassFlowRate - self.fuelMassFlowRate
 
     def getExitVelocity(self) -> None:
 
@@ -246,13 +248,25 @@ class ThrustChamber:
             numberOfPointsStraight=numberOfPointsStraight
             )
 
+        if self.nozzle != None:
+
+            self.getThrustChamberCoords()
+
     def getRaoBellNozzleGeometry(self, lengthFraction: float = None, numberOfPoints: int = 300) -> None:
 
         self.nozzle = RaoBellNozzle(expansionRatio=self.expansionRatio, throatRadius=self.throatRadius, lengthFraction=lengthFraction, numberOfPoints=numberOfPoints)
 
+        if self.combustionChamber != None:
+
+            self.getThrustChamberCoords()
+
     def getConicalNozzleGeometry(self, divergenceHalfAngle=15, numberOfPoints=300) -> None:
 
         self.nozzle = ConicalNozzle(self.expansionRatio, self.throatRadius, divergenceHalfAngle=divergenceHalfAngle, numberOfPoints=numberOfPoints)
+
+        if self.combustionChamber != None:
+
+            self.getThrustChamberCoords()
 
     def getThrustChamberCoords(self) -> None:
 
@@ -299,3 +313,98 @@ class ThrustChamber:
         if show == True:
 
             plt.show()
+
+    def outputResults(self, printResults=True, saveResults=False, decimalPlaces=2):
+
+        results = """
+Thrust Chamber Results:
+-----------------------
+Fuel: {fuel}
+Oxidiser: {ox}
+Thrust: {thrust} kN
+-----------------------
+Efficiency
+-----------------------
+Specific Impulse: {specificImpulse} s
+Exit Velocity: {exitVelocity} m/s
+Thrust Coefficient: {thrustCoefficient}
+C Star: {cStar} m/s
+-----------------------
+Mass Flow Rates
+-----------------------
+Fuel Mass Flow Rate: {fuelMassFlowRate} kg/s
+Oxidiser Mass Flow Rate: {oxMassFlowRate} kg/s
+Total Propellant Mass Flow Rate: {propellantMassFlowRate} kg/s
+-----------------------
+Pressures
+-----------------------
+Injection Pressure: {injectionPressure} Bar
+Chamber Pressure: {chamberPressure} Bar
+Ambient Pressure: {ambientPressure} Bar
+-----------------------
+Temperatures
+-----------------------
+Chamber Temperature: {chamberTemp} K
+Throat Temperature: {throatTemp} K
+Exit Temperature: {exitTemp} K
+-----------------------
+Chamber Parameters
+-----------------------
+L Star: {lStar} m
+Chamber Volume: {chamberVolume} m^3
+Contraction Ratio: {contractionRatio}
+-----------------------
+Sizes
+-----------------------
+Chamber Radius: {chamberRadius} m
+Chamber Area: {chamberArea} m^2
+Throat Radius: {throatRadius} m
+Throat Area: {throatArea} m^2
+Exit Radius: {exitRadius} m
+Exit Area: {exitArea} m^2
+-----------------------
+        """.format(
+            fuel = self.fuel.name,
+            ox = self.ox.name,
+            thrust = round(self.thrust/10**3, decimalPlaces),
+            mixtureRatio = round(self.mixtureRatio, decimalPlaces),
+            expansionRatio = round(self.expansionRatio, decimalPlaces),
+            specificImpulse = round(self.specificImpulse, decimalPlaces),
+            exitVelocity = round(self.exitVelocity, decimalPlaces),
+            thrustCoefficient = round(self.thrustCoefficient, decimalPlaces),
+            cStar = round(self.cStar, decimalPlaces),
+            injectionPressure = round(self.injectionPressure, decimalPlaces),
+            chamberPressure = round(self.chamberPressure, decimalPlaces),
+            ambientPressure = round(self.ambientPressure, decimalPlaces),
+            fuelMassFlowRate = round(self.fuelMassFlowRate, decimalPlaces),
+            oxMassFlowRate = round(self.oxMassFlowRate, decimalPlaces),
+            propellantMassFlowRate = round(self.propellantMassFlowRate, decimalPlaces),
+            chamberTemp = round(self.chamberTemp, decimalPlaces),
+            throatTemp = round(self.throatTemp, decimalPlaces),
+            exitTemp = round(self.exitTemp, decimalPlaces),
+            lStar = round(self.combustionChamber.lStar, decimalPlaces),
+            contractionRatio = round(self.combustionChamber.contractionRatio, decimalPlaces),
+            chamberRadius = round(self.combustionChamber.chamberRadius, decimalPlaces),
+            chamberArea = round(self.combustionChamber.chamberArea, decimalPlaces),
+            chamberVolume = round(self.combustionChamber.chamberVolume, decimalPlaces),
+            throatRadius = round(self.throatRadius, decimalPlaces),
+            throatArea = round(self.throatArea, decimalPlaces),
+            exitRadius = round(self.exitRadius, decimalPlaces),
+            exitArea = round(self.exitArea, decimalPlaces)
+        )
+
+        if printResults:
+
+            print(results)
+        
+        
+
+        
+        
+        
+        
+        
+        
+        
+        
+
