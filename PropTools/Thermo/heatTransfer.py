@@ -9,7 +9,13 @@ def bartzEquation(throatDiameter: float, viscosity: float, specificHeat: float, 
 
         firstBracket = C1 / (throatDiameter ** 0.2)
         secondBracket = (((viscosity ** 0.2) * specificHeat) / (prandtlNumber ** 0.6))
-        thirdBracket = ((chamberPressure) / (cStar)) ** 0.8
+
+        # Bartz's equation specifies chamber pressure to be used in pounds-per-square-inch, whereas length for other units is given in feet
+        # This causes issues when specifying everything in SI units, where length units are all consistent
+        # This correction factor accounts for that, giving the expected results
+        imperialUnitCorrectionFactor = 0.2236
+
+        thirdBracket = (((chamberPressure) * imperialUnitCorrectionFactor) / (cStar)) ** 0.8
 
         # If a throat average radius of curvature is given, the correction is applied
         if throatAverageRadiusOfCurvature != None:

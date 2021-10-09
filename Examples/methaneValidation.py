@@ -31,7 +31,7 @@ ox = Propellant(testThrustChamber.ox.name)
 
 fuel.defineState("T", 108, "P", 3*10**5)
 
-solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.15, coolantSideHeatTransferCorrelation="dittus-boelter", includeRoughnessCorrection=False)
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideHeatTransferCorrelation="dittus-boelter", includeRoughnessCorrection=False)
 
 testFuelTank = Tank(fuel)
 testFuelPump = Pump(isentropicEfficiency=0.7, outletPressure=150e5)
