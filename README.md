@@ -56,7 +56,7 @@ testThrustChamber.getThrustChamberCoords()
 This engine involves regenerative cooling so parameters for the solver are now defined:
 
 ```Python
-solverParameters = SolverParameters(bartzEquationCoefficient=0.023*0.33, coolantSideHeatTransferCorrelation="sieder-tate")
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideHeatTransferCorrelation="sieder-tate")
 ```
 
 To perform a regenerative cooling analysis, the cooling channels are defined, then fed into a regenerative cooling object along with the thrust chamber and solver paramters:
