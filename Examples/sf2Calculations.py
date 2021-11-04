@@ -1,4 +1,5 @@
 from PropTools.SubSystems.Engine.Cycle.cycle import Cycle, Line
+from PropTools.SubSystems.Engine.Cycle.pipe import Pipe
 from PropTools.SubSystems.Engine.Turbopump.pump import Pump
 from PropTools.SubSystems.Engine.Turbopump.turbine import Turbine
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
@@ -36,7 +37,9 @@ oxTank = Propellant(sf2ThrustChamber.ox.name)
 oxTank.defineState("T", 60, "P", 3*10**5)
 
 # Define the components on the fuel line
+fuelPipe1 = Pipe(diameter=0.0127, length=0.2)
 fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=90e5)
+fuelPipe2 = Pipe(diameter=0.0127, length=0.15)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=90, 
                                     wallThickness=1e-3, 
                                     ribThickness=1e-3, 
@@ -45,19 +48,21 @@ fuelCoolingChannels = CoolingChannels(numberOfChannels=90,
                                     wallRoughnessHeight=6e-6,
                                     helixAngle=25)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=sf2ThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
+fuelPipe3 = Pipe(diameter=0.0127, length=0.1)
 fuelTurbine = Turbine(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
+fuelPipe4 = Pipe(diameter=0.0127, length=0.1)
 
 # Define the components on the oxidiser line
+oxPipe1 = Pipe(diameter=0.0127, length=0.2)
 oxPump = Pump(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
+oxPipe2 = Pipe(diameter=0.0127, length=0.1)
 
 # Define the lines with above components
-fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPump, fuelRegenCooling, fuelTurbine])
-oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPump])
+fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelPump, fuelPipe2, fuelRegenCooling, fuelPipe3, fuelTurbine, fuelPipe4])
+oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPipe1, oxPump, oxPipe2])
 
 fuelLine.outputLineStates()
 oxLine.outputLineStates()
-
-exit()
 
 cycle = Cycle(fuelLine = fuelLine, oxLine = oxLine, thrustChamber = sf2ThrustChamber)
 
@@ -87,5 +92,5 @@ print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power + oxPump.powe
 # Plot
 #sf2ThrustChamber.plotGeometry()
 #fuelRegenCooling.plotChannels()
-fuelRegenCooling.plotHeatFlux()
-cycle.plotTSDiagram(fuelLine)
+#fuelRegenCooling.plotHeatFlux()
+#cycle.plotTSDiagram(fuelLine)

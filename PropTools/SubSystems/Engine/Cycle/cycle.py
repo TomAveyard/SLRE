@@ -1,5 +1,6 @@
 from copy import deepcopy
 from PropTools.SubSystems.Engine.Cycle.component import Component
+from PropTools.SubSystems.Engine.Cycle.pipe import Pipe
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 from PropTools.SubSystems.Engine.Tank.tank import Tank
 from PropTools.SubSystems.Engine.Turbopump.pump import Pump
@@ -36,6 +37,11 @@ class Line:
 
                 i.calculate(self.stateTracker, self.massFlowRate)
                 self.stationNames.append("Regenerative Cooling")
+
+            elif type(i) is Pipe:
+
+                i.calculate(self.stateTracker, self.massFlowRate)
+                self.stationNames.append("Pipe")
 
             self.stateTracker = deepcopy(i.outletState)
             self.states.append(deepcopy(self.stateTracker))
