@@ -51,14 +51,14 @@
             "Water": 0.02
         }
     },
-    "isopropanol": {
+    "propanol": {
         "symbol": "C3H8O",
         "ceaName": "Isopropanol",
         "type": "Fuel",
         "mixture": "False",
         "defaultLibrary": "Thermo",
         "components": {
-            "Isopropanol": 1
+            "propanol": 1
         }
     },
     "methane": {
@@ -88,7 +88,7 @@
         "mixture": "False",
         "defaultLibrary": "Thermo",
         "components": {
-            "Nitrous Oxide": 1
+            "nitrous oxide": 1
         }
     },
     "oxygen": {

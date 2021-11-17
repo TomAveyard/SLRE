@@ -101,6 +101,10 @@ class thermoWrapper:
 
         return(D)
 
+    def perMassToPerMol(self, quantityPerMol):
+
+        return quantityPerMol * self.averageMW
+
     def calculate(self, T=None, P=None, S=None, H=None, D=None, Q=None):
         
         # If density is given, it is converted to molar volume as that is what needs to be given to thermo
@@ -109,33 +113,30 @@ class thermoWrapper:
         else:
             molarVolume = None
 
+        # If entropy or enthalpy are given, they are converted to per mol rather than per kg, as that is what thermo requires
+        if S != None:
+            S = self.perMassToPerMol(S) / 1000
+        if H != None:
+            H = self.perMassToPerMol(H) / 1000
+
         # Calls the thermo flash function and stores results
-        # TODO: check if this can be calculated once, then extract results, rather than calculate for each result
         if self.type == "Pure":
 
-            self.T = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).T
-            self.P = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).P
-            self.S = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).S_mass()
-            self.H = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).H_mass()
-            self.D = self.molarVolumeToDensity(self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).V())
-            self.Q = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).VF
-            self.Cp = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).Cp_mass()
-            self.Cv = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).Cv_mass()
-            self.gamma = self.Cp/self.Cv
-            self.mu = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).mu()
-            self.kappa = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q).k()
+            #print(T, P, S, H, molarVolume, Q)
+            result = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q)
 
         elif self.type == "Mixture":
             
-            self.T = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).T
-            self.P = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).P
-            self.S = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).S_mass()
-            self.H = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).H_mass()
-            self.D = self.molarVolumeToDensity(self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).V())
-            self.Q = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).VF
-            self.Cp = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).Cp_mass()
-            self.Cv = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).Cv_mass()
-            self.gamma = self.Cp/self.Cv
-            self.mu = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).mu()
-            self.kappa = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions).k()
+            result = self.flasher.flash(T=T, P=P, S=S, H=H, V=molarVolume, VF=Q, zs=self.moleFractions)
 
+        self.T = result.T
+        self.P = result.P
+        self.S = result.S_mass()
+        self.H = result.H_mass()
+        self.D = self.molarVolumeToDensity(result.V())
+        self.Q = result.VF
+        self.Cp = result.Cp_mass()
+        self.Cv = result.Cv_mass()
+        self.gamma = self.Cp/self.Cv
+        self.mu = result.mu()
+        self.kappa = result.k()

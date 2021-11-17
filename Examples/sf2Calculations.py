@@ -9,18 +9,18 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 import matplotlib.pyplot as plt
 
 # Define thrust chamber
-sf2ThrustChamber = ThrustChamber(fuelName='ethanol', oxName='oxygen', thrust=10*10**3, chamberPressure=35, fac=True, contractionRatio=5, ambientPressure=0.7)
+sf2ThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=4)
 
 # Define chamber geometry
-sf2ThrustChamber.getChamberGeometry(lStar=1.1,
-                                    contractionLength=0.05, 
+sf2ThrustChamber.getChamberGeometry(lStar=0.4,
+                                    contractionLength=0.05,
                                     entranceRadiusOfCurvatureFactor=0.75, 
                                     throatEntranceStartAngle=-135, 
                                     numberOfPointsConverging=100,
                                     numberOfPointsStraight=50)
 
 # Define the nozzle geometry
-sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.8, numberOfPoints=100)
+sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.6, numberOfPoints=100)
 
 # Get the thrust chamber coordinates
 sf2ThrustChamber.getThrustChamberCoords()
@@ -28,18 +28,18 @@ sf2ThrustChamber.getThrustChamberCoords()
 #sf2ThrustChamber.plotGeometry()
 
 # Modify parameters for the solver
-solverParameters = SolverParameters(bartzEquationCoefficient=0.026*0.15, coolantSideHeatTransferCorrelation="sieder tate")
+solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideHeatTransferCorrelation="sieder tate")
 
 # Define the states of the propellants in the tanks
 fuelTank = Propellant(sf2ThrustChamber.fuel.name)
 fuelTank.defineState("T", 298, "P", 3*10**5)
 oxTank = Propellant(sf2ThrustChamber.ox.name)
-oxTank.defineState("T", 60, "P", 3*10**5)
+oxTank.defineState("T", 298, "P", 3*10**5)
 
 # Define the components on the fuel line
-fuelPipe1 = Pipe(diameter=0.0127, length=0.2)
-fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=90e5)
-fuelPipe2 = Pipe(diameter=0.0127, length=0.15)
+fuelPipe1 = Pipe(diameter=0.01905, length=0.3, surfaceRoughness=0.0007874)
+fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=40e5)
+fuelPipe2 = Pipe(diameter=0.01905, length=0.25, surfaceRoughness=0.0007874)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=90, 
                                     wallThickness=1e-3, 
                                     ribThickness=1e-3, 
@@ -48,21 +48,29 @@ fuelCoolingChannels = CoolingChannels(numberOfChannels=90,
                                     wallRoughnessHeight=6e-6,
                                     helixAngle=25)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=sf2ThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
-fuelPipe3 = Pipe(diameter=0.0127, length=0.1)
+fuelPipe3 = Pipe(diameter=0.0127, length=0.1, surfaceRoughness=0.0007874)
 fuelTurbine = Turbine(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
-fuelPipe4 = Pipe(diameter=0.0127, length=0.1)
 
 # Define the components on the oxidiser line
-oxPipe1 = Pipe(diameter=0.0127, length=0.2)
+#oxPipe1 = Pipe(diameter=0.01905, length=0.2)
 oxPump = Pump(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectionPressure*1e5)
-oxPipe2 = Pipe(diameter=0.0127, length=0.1)
 
 # Define the lines with above components
-fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelPump, fuelPipe2, fuelRegenCooling, fuelPipe3, fuelTurbine, fuelPipe4])
-oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPipe1, oxPump, oxPipe2])
+fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelPump, fuelPipe2, fuelRegenCooling, fuelPipe3, fuelTurbine])
+oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPump])
 
-fuelLine.outputLineStates()
-oxLine.outputLineStates()
+print("---")
+print("Pipe Pressure Losses")
+print("---")
+
+print(str(fuelPipe1.pressureLoss/1e5) + " Bar")
+print(str(fuelPipe2.pressureLoss/1e5) + " Bar")
+#0
+# print(str(oxPipe1.pressureLoss/1e5) + " Bar")
+
+print("---")
+
+exit()
 
 cycle = Cycle(fuelLine = fuelLine, oxLine = oxLine, thrustChamber = sf2ThrustChamber)
 

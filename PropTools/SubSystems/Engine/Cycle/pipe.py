@@ -71,4 +71,9 @@ class Pipe(Component):
         self.outletPressure = self.inletState.P - self.pressureLoss
 
         self.outletState = Propellant(self.inletState.name)
+        print("---")
+        print(self.inletState.P)
         self.outletState.defineState("T", self.inletState.T, "P", self.outletPressure)
+        print(self.outletPressure)
+        print(self.pressureLoss)
+        print("---")

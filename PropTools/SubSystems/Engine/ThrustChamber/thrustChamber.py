@@ -64,6 +64,7 @@ class ThrustChamber:
         else:
 
             self.mixtureRatio = self.getMaxSpecificImpulseMixtureRatio(searchResolution=mixtureRatioSearchResolution, startSearch=mixtureRatioSearchStart)
+            print(self.mixtureRatio)
             self.getCEAResults()
 
         self.getMassFlowRate()
