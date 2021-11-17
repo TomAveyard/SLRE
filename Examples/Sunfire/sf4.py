@@ -12,20 +12,18 @@ import matplotlib.pyplot as plt
 sf2ThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=4)
 
 # Define chamber geometry
-sf2ThrustChamber.getChamberGeometry(lStar=0.4,
-                                    contractionLength=0.05,
+sf2ThrustChamber.getChamberGeometry(lStar=1.2,
+                                    contractionLength=0.075,
                                     entranceRadiusOfCurvatureFactor=0.75, 
                                     throatEntranceStartAngle=-135, 
                                     numberOfPointsConverging=100,
                                     numberOfPointsStraight=50)
 
 # Define the nozzle geometry
-sf2ThrustChamber.getRaoBellNozzleGeometry(lengthFraction=0.6, numberOfPoints=100)
+sf2ThrustChamber.getConicalNozzleGeometry(numberOfPoints=100)
 
 # Get the thrust chamber coordinates
 sf2ThrustChamber.getThrustChamberCoords()
-
-#sf2ThrustChamber.plotGeometry()
 
 # Modify parameters for the solver
 solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideHeatTransferCorrelation="sieder tate")
@@ -34,7 +32,7 @@ solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideH
 fuelTank = Propellant(sf2ThrustChamber.fuel.name)
 fuelTank.defineState("T", 298, "P", 3*10**5)
 oxTank = Propellant(sf2ThrustChamber.ox.name)
-oxTank.defineState("T", 298, "P", 3*10**5)
+oxTank.defineState("T", 253, "P", 3*10**5)
 
 # Define the components on the fuel line
 fuelPipe1 = Pipe(diameter=0.01905, length=0.3, surfaceRoughness=0.0007874)
@@ -58,19 +56,6 @@ oxPump = Pump(isentropicEfficiency=0.5, outletPressure=sf2ThrustChamber.injectio
 # Define the lines with above components
 fuelLine = Line(inletState=fuelTank, massFlowRate=sf2ThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelPump, fuelPipe2, fuelRegenCooling, fuelPipe3, fuelTurbine])
 oxLine = Line(inletState=oxTank, massFlowRate=sf2ThrustChamber.oxMassFlowRate, components=[oxPump])
-
-print("---")
-print("Pipe Pressure Losses")
-print("---")
-
-print(str(fuelPipe1.pressureLoss/1e5) + " Bar")
-print(str(fuelPipe2.pressureLoss/1e5) + " Bar")
-#0
-# print(str(oxPipe1.pressureLoss/1e5) + " Bar")
-
-print("---")
-
-exit()
 
 cycle = Cycle(fuelLine = fuelLine, oxLine = oxLine, thrustChamber = sf2ThrustChamber)
 
