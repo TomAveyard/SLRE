@@ -23,6 +23,10 @@ class Propellant:
         self.properties = ["T", "P", "D", "H", "S", "Q"]
 
         if self.library == "CoolProp":
+            
+            if self.name == "nitrousoxide":
+
+                self.name = "NitrousOxide"
 
             CP.set_reference_state(self.name, "NBP")
 
@@ -103,23 +107,23 @@ class Propellant:
             propertiesDict[property1] = property1Value
             propertiesDict[property2] = property2Value
 
-            # Loop over the properties that need to be solved
-            for property in propertiesToSolve:
-                
-                if self.library.lower() == "coolprop":
-                    
+            if self.library.lower() == "coolprop":
+
+                # Loop over the properties that need to be solved
+                for property in propertiesToSolve:
+                        
                     propertiesDict[property] = CP.PropsSI(property, property1, property1Value, property2, property2Value, self.name)
 
-                elif self.library.lower() == "thermo":
-                    
-                    self.chemical.calculate(T=propertiesDict["T"], P=propertiesDict["P"], D=propertiesDict["D"], H=propertiesDict["H"], S=propertiesDict["S"], Q=propertiesDict["Q"])
+            elif self.library.lower() == "thermo":
+                
+                self.chemical.calculate(T=propertiesDict["T"], P=propertiesDict["P"], D=propertiesDict["D"], H=propertiesDict["H"], S=propertiesDict["S"], Q=propertiesDict["Q"])
 
-                    propertiesDict["T"] = self.chemical.T
-                    propertiesDict["P"] = self.chemical.P
-                    propertiesDict["D"] = self.chemical.D
-                    propertiesDict["H"] = self.chemical.H
-                    propertiesDict["S"] = self.chemical.S
-                    propertiesDict["Q"] = self.chemical.Q
+                propertiesDict["T"] = self.chemical.T
+                propertiesDict["P"] = self.chemical.P
+                propertiesDict["D"] = self.chemical.D
+                propertiesDict["H"] = self.chemical.H
+                propertiesDict["S"] = self.chemical.S
+                propertiesDict["Q"] = self.chemical.Q
                     
             # Save the state to the object
             self.T = propertiesDict["T"]
