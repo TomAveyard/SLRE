@@ -30,30 +30,27 @@ solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideH
 
 # Define the states of the propellants in the tanks
 fuelTank = Propellant(sfThrustChamber.fuel.name)
-fuelTank.defineState("T", 298, "P", 3*10**5)
+fuelTank.defineState("T", 298, "P", 25*10**5)
 oxTank = Propellant(sfThrustChamber.ox.name)
 oxTank.defineState("T", 253, "P", 25*10**5)
 
 # Define the components on the fuel line
 fuelPipe1 = Pipe(diameter=0.01905, length=0.3, surfaceRoughness=0.0007874)
-fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=sfThrustChamber.injectionPressure+32.5e5)
-fuelPipe2 = Pipe(diameter=0.01905, length=0.25, surfaceRoughness=0.0007874)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=90, 
                                     wallThickness=1e-3, 
                                     ribThickness=1e-3, 
                                     channelHeight=2e-3, 
                                     wallConductivity=237, 
                                     wallRoughnessHeight=6e-6,
-                                    helixAngle=25)
+                                    helixAngle=90)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=sfThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
-fuelPipe3 = Pipe(diameter=0.0127, length=0.1, surfaceRoughness=0.0007874)
-fuelTurbine = Turbine(isentropicEfficiency=0.5, outletPressure=sfThrustChamber.injectionPressure*1e5)
+fuelPipe2 = Pipe(diameter=0.0127, length=0.1, surfaceRoughness=0.0007874)
 
 # Define the components on the oxidiser line
 oxPipe1 = Pipe(diameter=0.01905, length=0.2)
 
 # Define the lines with above components
-fuelLine = Line(inletState=fuelTank, massFlowRate=sfThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelPump, fuelPipe2, fuelRegenCooling, fuelPipe3, fuelTurbine])
+fuelLine = Line(inletState=fuelTank, massFlowRate=sfThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelRegenCooling, fuelPipe2])
 oxLine = Line(inletState=oxTank, massFlowRate=sfThrustChamber.oxMassFlowRate, components=[oxPipe1])
 
 cycle = Cycle(fuelLine = fuelLine, oxLine = oxLine, thrustChamber = sfThrustChamber)
@@ -64,23 +61,12 @@ print("Engine Performance")
 print("----------")
 print(f"Specific Impulse: {round(sfThrustChamber.specificImpulse, 2)} s")
 print("----------")
-print("Power Balance")
-print("----------")
-print(f"Regenerative Cooling Heat Power: {round(fuelRegenCooling.totalHeatPower/1e3, 2)} kW")
-print(f"Fuel Pump Power: {round(fuelPump.power/1e3, 2)} kW")
-print(f"Total Pump Power: {round((fuelPump.power)/1e3, 2)} kW")
-print(f"Turbine Power: {round(fuelTurbine.power/1e3, 2)} kW")
-print(f"Power Balance: {round((fuelTurbine.power + (fuelPump.power))/1e3, 2)} kW")
-
 print("----------")
 print("Fuel Line Component Outputs")
 print("----------")
 fuelPipe1.printResults(label="Fuel Pipe 1")
-fuelPump.printResults(label="Fuel Pump")
-fuelPipe2.printResults(label="Fuel Pipe 2")
 fuelRegenCooling.printResults(label="Fuel Regen Cooling")
-fuelPipe3.printResults(label="Fuel Pipe 3")
-fuelTurbine.printResults(label="Fuel Turbine")
+fuelPipe2.printResults(label="Fuel Pipe 2")
 print("----------")
 print("Oxidiser Line Component Outputs")
 print("----------")
