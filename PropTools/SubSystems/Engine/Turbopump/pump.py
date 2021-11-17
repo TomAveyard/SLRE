@@ -1,4 +1,6 @@
 from sys import exit
+
+from fluids.constants.constants import G
 from PropTools.SubSystems.Engine.Cycle.component import Component
 from PropTools.SubSystems.Engine.Propellant.propellant import Propellant
 
@@ -16,6 +18,7 @@ class Pump(Component):
             exit("Please specify either a pressure rise or an outlet pressure for the pump, not both")
 
         self.pressureRise = pressureRise
+        self.headRise = self.pressureRise / (G * self.inletState.D)
         self.outletPressure = outletPressure
 
         self.massFlowRate = None
@@ -47,3 +50,19 @@ class Pump(Component):
 
         self.massFlowRate = massFlowRate
         self.power = self.deltaHReal * self.massFlowRate
+
+    def printResults(self, label="Pump", decimalPlaces: int = 2):
+
+        print(self.printSeperator)
+        print(label + " Results")
+        print(self.printSeperator)
+        print("Substance: " + self.inletState.name)
+        print("Mass Flow Rate: " + str(round(self.massFlowRate, decimalPlaces)) + " kg/s")
+        print("Inlet Temperature: " + str(round(self.inletState.T, decimalPlaces)) + " K")
+        print("Inlet Pressure: " + str(round(self.inletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Outlet Temperature: " + str(round(self.outletState.T, decimalPlaces)) + " K")
+        print("Outlet Pressure: " + str(round(self.outletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Pressure Rise: " + str(round(self.pressureRise, decimalPlaces)) + " Bar")
+        print("Head Rise: " + str(round(self.headRise, decimalPlaces)) + " m")
+        print("Power: " + str(round(self.power/1e3, decimalPlaces)) + " kW")
+        print(self.printSeperator)

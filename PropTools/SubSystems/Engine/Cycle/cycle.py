@@ -48,45 +48,6 @@ class Line:
 
         self.outletState = self.states[-1]
 
-    def outputLineStates(self, printResults=True, decimalPoints=2):
-
-        results = """
------------------------
-{propellant} Line Results
------------------------
-Mass Flow Rate: {massFlowRate} kg/s
-Inlet Temperature: {inletTemperature} K
-Inlet Pressure:  {inletPressure} bar
------------------------
-        """.format(
-            propellant = self.inletState.name,
-            massFlowRate = round(self.massFlowRate, decimalPoints),
-            inletTemperature = round(self.inletState.T, decimalPoints),
-            inletPressure = round(self.inletState.P/1e5, decimalPoints)
-        )
-
-        for i in range(1, len(self.states)):
-
-            results = results + """
-{stationName} Inlet/Outlet States
------------------------
-Inlet Pressure: {inletPressure} bar
-Inlet Temperature: {inletTemperature} K
-Outlet Pressure: {outletPressure} bar
-Outlet Temperature: {outletTemperature} K
------------------------
-            """.format(
-                stationName = self.stationNames[i-1],
-                inletPressure = round(self.states[i-1].P/1e5, decimalPoints),
-                inletTemperature = round(self.states[i-1].T, decimalPoints),
-                outletPressure = round(self.states[i].P/1e5, decimalPoints),
-                outletTemperature = round(self.states[i].T, decimalPoints)
-            )
-
-        if printResults:
-
-            print(results)
-
 class Cycle:
 
     def __init__(self, fuelLine: Line = None, oxLine: Line = None, thrustChamber: ThrustChamber = None):

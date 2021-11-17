@@ -7,6 +7,12 @@ class Component:
         self.outletState = None
         self.type = None
 
+        self.printSeperator = "----------"
+
     def calculate(self):
+
+        pass
+
+    def printResults(self):
 
         pass
