@@ -321,11 +321,24 @@ class RegenerativeCooling(Component):
         print("Heat transfer calculaton complete")
         print("Total iterations: " + str(totalIterations))
         print("---")
-        print("Coolant Outlet Temperature: " + str(self.outletState.T))
-        print("Coolant Enthalpy Change: " + str(self.enthalpyChange))
-        print("Total Heat Power: " + str(self.totalHeatPower))
-        print("Total Pressure Loss: " + str((self.outletState.P - self.inletState.P)/1e5) + " Bar")
 
+    def printResults(self, label: str = "Regenerative Cooling Channels", decimalPlaces: int = 2):
+
+        print(self.printSeperator)
+        print(label + " Results")
+        print(self.printSeperator)
+        print("Substance: " + self.inletState.name)
+        print("Mass Flow Rate: " + str(round(self.massFlowRate, decimalPlaces)) + " kg/s")
+        print("Inlet Temperature: " + str(round(self.inletState.T, decimalPlaces)) + " K")
+        print("Inlet Pressure: " + str(round(self.inletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Outlet Temperature: " + str(round(self.outletState.T, decimalPlaces)) + " K")
+        print("Outlet Pressure: " + str(round(self.outletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Temperature Rise: " + str(round((self.outletState.T - self.inletState.T), decimalPlaces)) + " K")
+        print("Pressure Loss: " + str(round((self.inletState.P - self.outletState.P)/1e5, decimalPlaces)) + " Bar")
+        print("Max Heat Flux: " + str(round(max(self.heatFluxes)/1e3, decimalPlaces)) + " kW/m^2")
+        print("Max Gas Side Wall Temp: " + str(round(max(self.gasSideWallTemps), decimalPlaces)) + " K")
+        print(self.printSeperator)
+        
     def plotChannels(self, plotAll: bool = True, includeThrustChamberContour: bool = False, lineWidth: float = 1):
 
         geometry = Helix(self.thrustChamber.axialCoords, self.thrustChamber.radialCoords, self.coolingChannels.helixAngle)

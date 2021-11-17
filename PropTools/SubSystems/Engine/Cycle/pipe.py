@@ -84,6 +84,6 @@ class Pipe(Component):
         print("Inlet Pressure: " + str(round(self.inletState.P/1e5, decimalPlaces)) + " Bar")
         print("Outlet Temperature: " + str(round(self.outletState.T, decimalPlaces)) + " K")
         print("Outlet Pressure: " + str(round(self.outletState.P/1e5, decimalPlaces)) + " Bar")
-        print("Pressure Loss: " + str(round(self.pressureLoss, decimalPlaces)) + " Bar")
+        print("Pressure Loss: " + str(round(self.pressureLoss/1e5, decimalPlaces)) + " Bar")
         print(self.printSeperator)
 
