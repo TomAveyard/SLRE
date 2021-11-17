@@ -46,3 +46,18 @@ class Turbine(Component):
 
         self.massFlowRate = massFlowRate
         self.power = self.deltaHReal * self.massFlowRate
+    
+    def printResults(self, label="Turbine", decimalPlaces: int = 2):
+
+        print(self.printSeperator)
+        print(label + " Results")
+        print(self.printSeperator)
+        print("Substance: " + self.inletState.name)
+        print("Mass Flow Rate: " + str(round(self.massFlowRate, decimalPlaces)) + " kg/s")
+        print("Inlet Temperature: " + str(round(self.inletState.T, decimalPlaces)) + " K")
+        print("Inlet Pressure: " + str(round(self.inletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Outlet Temperature: " + str(round(self.outletState.T, decimalPlaces)) + " K")
+        print("Outlet Pressure: " + str(round(self.outletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Pressure Loss: " + str(round(self.pressureLoss, decimalPlaces)) + " Bar")
+        print("Power: " + str(round(self.power/1e3, decimalPlaces)) + " kW")
+        print(self.printSeperator)
