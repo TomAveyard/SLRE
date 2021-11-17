@@ -71,9 +71,19 @@ class Pipe(Component):
         self.outletPressure = self.inletState.P - self.pressureLoss
 
         self.outletState = Propellant(self.inletState.name)
-        print("---")
-        print(self.inletState.P)
         self.outletState.defineState("T", self.inletState.T, "P", self.outletPressure)
-        print(self.outletPressure)
-        print(self.pressureLoss)
-        print("---")
+
+    def printResults(self, label: str = "Pipe", decimalPlaces: int = 2):
+
+        print(self.printSeperator)
+        print(label + " Results")
+        print(self.printSeperator)
+        print("Substance: " + self.inletState.name)
+        print("Mass Flow Rate: " + str(round(self.massFlowRate, decimalPlaces)) + " kg/s")
+        print("Inlet Temperature: " + str(round(self.inletState.T, decimalPlaces)) + " K")
+        print("Inlet Pressure: " + str(round(self.inletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Outlet Temperature: " + str(round(self.outletState.T, decimalPlaces)) + " K")
+        print("Outlet Pressure: " + str(round(self.outletState.P/1e5, decimalPlaces)) + " Bar")
+        print("Pressure Loss: " + str(round(self.pressureLoss, decimalPlaces)) + " Bar")
+        print(self.printSeperator)
+
