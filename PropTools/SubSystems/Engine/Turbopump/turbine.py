@@ -29,6 +29,8 @@ class Turbine(Component):
 
         if self.pressureLoss != None:
             self.outletPressure = self.inletState.P - self.pressureLoss
+        else:
+            self.pressureLoss = self.inletState.P - self.outletPressure
 
         # Defines the isentropic outlet state
         outletStateIsentropic = Propellant(self.inletState.name)
@@ -58,6 +60,7 @@ class Turbine(Component):
         print("Inlet Pressure: " + str(round(self.inletState.P/1e5, decimalPlaces)) + " Bar")
         print("Outlet Temperature: " + str(round(self.outletState.T, decimalPlaces)) + " K")
         print("Outlet Pressure: " + str(round(self.outletState.P/1e5, decimalPlaces)) + " Bar")
-        print("Pressure Loss: " + str(round(self.pressureLoss, decimalPlaces)) + " Bar")
+        print("Temperature Loss: " + str(round((self.inletState.T - self.outletState.T), decimalPlaces)) + " K")
+        print("Pressure Loss: " + str(round(self.pressureLoss/1e5, decimalPlaces)) + " Bar")
         print("Power: " + str(round(self.power/1e3, decimalPlaces)) + " kW")
         print(self.printSeperator)
