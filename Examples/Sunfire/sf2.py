@@ -9,7 +9,7 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 import matplotlib.pyplot as plt
 
 # Define thrust chamber
-sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.5)
+sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.75)
 
 # Define chamber geometry
 sfThrustChamber.getChamberGeometry(lStar=1.2,
@@ -40,7 +40,7 @@ fuelCoolingChannels = CoolingChannels(numberOfChannels=90,
                                     wallThickness=1e-3, 
                                     ribThickness=1e-3, 
                                     channelHeight=2e-3, 
-                                    wallConductivity=237, 
+                                    wallConductivity=14, 
                                     wallRoughnessHeight=6e-6,
                                     helixAngle=90)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=sfThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
@@ -60,7 +60,30 @@ print("----------")
 print("Engine Performance")
 print("----------")
 print(f"Specific Impulse: {round(sfThrustChamber.specificImpulse, 2)} s")
+print(f"Exit Velocity: {round(sfThrustChamber.exitVelocity, 2)} m/s")
+print(f"Thrust Coefficient: {round(sfThrustChamber.thrustCoefficient, 2)}")
+print(f"C Star: {round(sfThrustChamber.cStar, 2)} m/s")
 print("----------")
+print("Mass Flow Rates")
+print("----------")
+print(f"Fuel Mass Flow Rate: {round(sfThrustChamber.fuelMassFlowRate, 2)} kg/s")
+print(f"Oxidiser Mass Flow Rate: {round(sfThrustChamber.oxMassFlowRate, 2)} kg/s")
+print(f"Total Mass Flow Rate: {round(sfThrustChamber.propellantMassFlowRate, 2)} kg/s")
+print("----------")
+print("Temperatures")
+print("----------")
+print(f"Chamber Temperature: {round(sfThrustChamber.chamberTemp, 2)} K")
+print(f"Throat Temperature: {round(sfThrustChamber.throatTemp, 2)} K")
+print(f"Exit Temperature: {round(sfThrustChamber.exitTemp, 2)} K")
+print("----------")
+print("Sizes")
+print("----------")
+print(f"Chamber Radius: {round(sfThrustChamber.combustionChamber.chamberRadius, 2)} m")
+print(f"Chamber Area: {round(sfThrustChamber.combustionChamber.chamberArea, 2)} m^2")
+print(f"Throat Radius: {round(sfThrustChamber.combustionChamber.throatRadius, 2)} m")
+print(f"Throat Area: {round(sfThrustChamber.combustionChamber.throatArea, 2)} m^2")
+print(f"Exit Radius: {round(sfThrustChamber.exitRadius, 2)} m")
+print(f"Exit Area: {round(sfThrustChamber.exitArea, 2)} m^2")
 print("----------")
 print("Fuel Line Component Outputs")
 print("----------")
