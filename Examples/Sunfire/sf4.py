@@ -9,7 +9,7 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 import matplotlib.pyplot as plt
 
 # Define thrust chamber
-sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.75)
+sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=3.5)
 
 # Define the nozzle geometry
 sfThrustChamber.getConicalNozzleGeometry(numberOfPoints=100)
@@ -33,24 +33,25 @@ oxTank.defineState("T", 253, "P", 25*10**5)
 
 # Define the components on the fuel line
 fuelPipe1 = Pipe(diameter=0.01905, length=0.3, surfaceRoughness=0.0007874)
-fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=sfThrustChamber.injectionPressure+32.5e5)
+fuelPump = Pump(isentropicEfficiency=0.5, outletPressure=sfThrustChamber.injectionPressure+40e5)
 fuelPipe2 = Pipe(diameter=0.01905, length=0.25, surfaceRoughness=0.0007874)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=90, 
-                                    wallThickness=0.4e-3, 
+                                    wallThickness=1e-3, 
                                     ribThickness=1e-3, 
                                     channelHeight=2e-3, 
-                                    wallConductivity=14, 
+                                    wallConductivity=400, 
                                     wallRoughnessHeight=6e-6,
                                     helixAngle=25)
 fuelRegenCooling = RegenerativeCooling(thrustChamber=sfThrustChamber, coolingChannels=fuelCoolingChannels, solverParameters=solverParameters)
 fuelPipe3 = Pipe(diameter=0.0127, length=0.1, surfaceRoughness=0.0007874)
-fuelTurbine = Turbine(isentropicEfficiency=0.5, outletPressure=sfThrustChamber.injectionPressure*1e5)
+fuelTurbine = Turbine(isentropicEfficiency=0.5, outletPressure=sfThrustChamber.injectionPressure*1e5+6e5)
+fuelPipe4 = Pipe(diameter=0.0127, length=0.1, surfaceRoughness=0.0007874)
 
 # Define the components on the oxidiser line
 oxPipe1 = Pipe(diameter=0.01905, length=0.2)
 
 # Define the lines with above components
-fuelLine = Line(inletState=fuelTank, massFlowRate=sfThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelPump, fuelPipe2, fuelRegenCooling, fuelPipe3, fuelTurbine])
+fuelLine = Line(inletState=fuelTank, massFlowRate=sfThrustChamber.fuelMassFlowRate, components=[fuelPipe1, fuelPump, fuelPipe2, fuelRegenCooling, fuelPipe3, fuelTurbine, fuelPipe4])
 oxLine = Line(inletState=oxTank, massFlowRate=sfThrustChamber.oxMassFlowRate, components=[oxPipe1])
 
 cycle = Cycle(fuelLine = fuelLine, oxLine = oxLine, thrustChamber = sfThrustChamber)
@@ -78,12 +79,12 @@ print(f"Exit Temperature: {round(sfThrustChamber.exitTemp, 2)} K")
 print("----------")
 print("Sizes")
 print("----------")
-print(f"Chamber Radius: {round(sfThrustChamber.combustionChamber.chamberRadius, 2)} m")
-print(f"Chamber Area: {round(sfThrustChamber.combustionChamber.chamberArea, 2)} m^2")
-print(f"Throat Radius: {round(sfThrustChamber.combustionChamber.throatRadius, 2)} m")
-print(f"Throat Area: {round(sfThrustChamber.combustionChamber.throatArea, 2)} m^2")
-print(f"Exit Radius: {round(sfThrustChamber.exitRadius, 2)} m")
-print(f"Exit Area: {round(sfThrustChamber.exitArea, 2)} m^2")
+print(f"Chamber Radius: {round(sfThrustChamber.combustionChamber.chamberRadius*1e3, 2)} mm")
+print(f"Chamber Area: {round(sfThrustChamber.combustionChamber.chamberArea*1e6, 2)} mm^2")
+print(f"Throat Radius: {round(sfThrustChamber.combustionChamber.throatRadius*1e3, 2)} mm")
+print(f"Throat Area: {round(sfThrustChamber.combustionChamber.throatArea*1e6, 2)} mm^2")
+print(f"Exit Radius: {round(sfThrustChamber.exitRadius*1e3, 2)} mm")
+print(f"Exit Area: {round(sfThrustChamber.exitArea*1e6, 2)} mm^2")
 print("----------")
 print("Power Balance")
 print("----------")
@@ -102,6 +103,7 @@ fuelPipe2.printResults(label="Fuel Pipe 2")
 fuelRegenCooling.printResults(label="Fuel Regen Cooling")
 fuelPipe3.printResults(label="Fuel Pipe 3")
 fuelTurbine.printResults(label="Fuel Turbine")
+fuelPipe4.printResults(label="Fuel Pipe 4")
 print("----------")
 print("Oxidiser Line Component Outputs")
 print("----------")
