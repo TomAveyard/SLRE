@@ -9,7 +9,7 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 import matplotlib.pyplot as plt
 
 # Define thrust chamber
-sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.75)
+sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.5)
 
 # Define the nozzle geometry
 sfThrustChamber.getConicalNozzleGeometry(numberOfPoints=100)
@@ -75,12 +75,12 @@ print(f"Exit Temperature: {round(sfThrustChamber.exitTemp, 2)} K")
 print("----------")
 print("Sizes")
 print("----------")
-print(f"Chamber Radius: {round(sfThrustChamber.combustionChamber.chamberRadius, 2)} m")
-print(f"Chamber Area: {round(sfThrustChamber.combustionChamber.chamberArea, 2)} m^2")
-print(f"Throat Radius: {round(sfThrustChamber.combustionChamber.throatRadius, 2)} m")
-print(f"Throat Area: {round(sfThrustChamber.combustionChamber.throatArea, 2)} m^2")
-print(f"Exit Radius: {round(sfThrustChamber.exitRadius, 2)} m")
-print(f"Exit Area: {round(sfThrustChamber.exitArea, 2)} m^2")
+print(f"Chamber Radius: {round(sfThrustChamber.combustionChamber.chamberRadius*1e3, 2)} mm")
+print(f"Chamber Area: {round(sfThrustChamber.combustionChamber.chamberArea*1e6, 2)} mm^2")
+print(f"Throat Radius: {round(sfThrustChamber.combustionChamber.throatRadius*1e3, 2)} mm")
+print(f"Throat Area: {round(sfThrustChamber.combustionChamber.throatArea*1e6, 2)} mm^2")
+print(f"Exit Radius: {round(sfThrustChamber.exitRadius*1e3, 2)} mm")
+print(f"Exit Area: {round(sfThrustChamber.exitArea*1e6, 2)} mm^2")
 print("----------")
 print("Fuel Line Component Outputs")
 print("----------")
