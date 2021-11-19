@@ -261,7 +261,7 @@ class ThrustChamber:
 
             self.getThrustChamberCoords()
 
-    def getConicalNozzleGeometry(self, divergenceHalfAngle=15, numberOfPoints=300) -> None:
+    def getConicalNozzleGeometry(self, divergenceHalfAngle: float = 15, numberOfPoints: int = 300) -> None:
 
         self.nozzle = ConicalNozzle(self.expansionRatio, self.throatRadius, divergenceHalfAngle=divergenceHalfAngle, numberOfPoints=numberOfPoints)
 

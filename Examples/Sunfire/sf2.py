@@ -9,7 +9,7 @@ from PropTools.SubSystems.Engine.ThrustChamber.regenerativeCooling import Regene
 import matplotlib.pyplot as plt
 
 # Define thrust chamber
-sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.5)
+sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.75)
 
 # Define chamber geometry
 sfThrustChamber.getChamberGeometry(lStar=1.2,
@@ -37,7 +37,7 @@ oxTank.defineState("T", 253, "P", 25*10**5)
 # Define the components on the fuel line
 fuelPipe1 = Pipe(diameter=0.01905, length=0.3, surfaceRoughness=0.0007874)
 fuelCoolingChannels = CoolingChannels(numberOfChannels=90, 
-                                    wallThickness=0.4e-3, 
+                                    wallThickness=1e-3, 
                                     ribThickness=1e-3, 
                                     channelHeight=2e-3, 
                                     wallConductivity=14, 
