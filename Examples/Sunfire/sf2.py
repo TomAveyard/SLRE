@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 # Define thrust chamber
 sfThrustChamber = ThrustChamber(fuelName='propanol', oxName='nitrous oxide', thrust=10*10**3, chamberPressure=20, fac=True, contractionRatio=4, ambientPressure=1.01325, mixtureRatioOverride=2.75)
 
+# Define the nozzle geometry
+sfThrustChamber.getConicalNozzleGeometry(numberOfPoints=100)
+
 # Define chamber geometry
 sfThrustChamber.getChamberGeometry(lStar=1.2,
                                     contractionLength=0.075,
@@ -18,12 +21,6 @@ sfThrustChamber.getChamberGeometry(lStar=1.2,
                                     throatEntranceStartAngle=-135, 
                                     numberOfPointsConverging=100,
                                     numberOfPointsStraight=50)
-
-# Define the nozzle geometry
-sfThrustChamber.getConicalNozzleGeometry(numberOfPoints=100)
-
-# Get the thrust chamber coordinates
-sfThrustChamber.getThrustChamberCoords()
 
 # Modify parameters for the solver
 solverParameters = SolverParameters(bartzEquationCoefficient=0.026, coolantSideHeatTransferCorrelation="sieder tate")

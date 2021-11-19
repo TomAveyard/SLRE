@@ -1,4 +1,4 @@
-from math import sqrt
+from math import sqrt, cos, radians
 from os import name
 import sys
 from matplotlib import pyplot as plt
@@ -67,15 +67,11 @@ class ThrustChamber:
             print(self.mixtureRatio)
             self.getCEAResults()
 
-        self.getMassFlowRate()
-        self.getExitVelocity()
-        self.getExitSizes()
-        self.getThroatSizes()
-
         self.combustionChamber = None
         self.nozzle = None
         self.axialCoords = None
         self.radialCoords = None
+        self.nozzleCorrectionFactor = 1
 
     # Returns a cea object using the unit system seen below
     def getCEAObject(self) -> CEA_Obj:
@@ -222,8 +218,9 @@ class ThrustChamber:
 
     def getExitVelocity(self) -> None:
 
-        RSpecific = R * 1000 / self.exitMolWt
-        self.exitVelocity = sqrt(self.exitGamma * RSpecific * self.temperatures[-1]) * self.exitMachNumber
+        #RSpecific = R * 1000 / self.exitMolWt
+        #self.exitVelocity = sqrt(self.exitGamma * RSpecific * self.temperatures[-1]) * self.exitMachNumber
+        self.exitVelocity = self.specificImpulse * G
 
     def getExitSizes(self) -> None:
 
@@ -238,6 +235,10 @@ class ThrustChamber:
         self.throatDiameter = self.throatRadius * 2
 
     def getChamberGeometry(self, lStar: float = None, contractionLength: float = None, entranceRadiusOfCurvatureFactor: float = 1.5, throatEntranceStartAngle: float = (-135), numberOfPointsConverging: int = 100, numberOfPointsStraight: int = 100) -> None:
+        
+        if self.nozzle == None:
+
+            sys.exit("Error: Nozzle has to be defined before combustion chamber")
 
         self.combustionChamber = CombustionChamber(lStar=lStar, 
             throatRadius=self.throatRadius, 
@@ -249,25 +250,37 @@ class ThrustChamber:
             numberOfPointsStraight=numberOfPointsStraight
             )
 
-        if self.nozzle != None:
+        self.getThrustChamberCoords()
 
-            self.getThrustChamberCoords()
+    def getRaoBellNozzleGeometry(self, lengthFraction: float = None, numberOfPoints: int = 300, idealSpecificImpulse: bool = False) -> None:
+        
+        self.idealSpecificImpulse = idealSpecificImpulse
+        
+        if not self.idealSpecificImpulse:
+            self.nozzleCorrectionFactor = 0.5 * (1 + cos(radians(self.nozzle.exitWallAngle)))
+            self.specificImpulse = self.specificImpulse * self.nozzleCorrectionFactor
 
-    def getRaoBellNozzleGeometry(self, lengthFraction: float = None, numberOfPoints: int = 300) -> None:
+        self.getMassFlowRate()
+        self.getExitVelocity()
+        self.getExitSizes()
+        self.getThroatSizes()
 
         self.nozzle = RaoBellNozzle(expansionRatio=self.expansionRatio, throatRadius=self.throatRadius, lengthFraction=lengthFraction, numberOfPoints=numberOfPoints)
 
-        if self.combustionChamber != None:
+    def getConicalNozzleGeometry(self, divergenceHalfAngle: float = 15, numberOfPoints: int = 300, idealSpecificImpulse: bool = False) -> None:
+        
+        self.idealSpecificImpulse = idealSpecificImpulse
 
-            self.getThrustChamberCoords()
+        if not self.idealSpecificImpulse:
+            self.nozzleCorrectionFactor = 0.5 * (1 + cos(radians(divergenceHalfAngle)))
+            self.specificImpulse = self.specificImpulse * self.nozzleCorrectionFactor
 
-    def getConicalNozzleGeometry(self, divergenceHalfAngle: float = 15, numberOfPoints: int = 300) -> None:
+        self.getMassFlowRate()
+        self.getExitVelocity()
+        self.getExitSizes()
+        self.getThroatSizes()
 
         self.nozzle = ConicalNozzle(self.expansionRatio, self.throatRadius, divergenceHalfAngle=divergenceHalfAngle, numberOfPoints=numberOfPoints)
-
-        if self.combustionChamber != None:
-
-            self.getThrustChamberCoords()
 
     def getThrustChamberCoords(self) -> None:
 
