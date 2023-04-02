@@ -2,7 +2,8 @@ from math import sqrt, cos, radians
 from os import name
 import sys
 from matplotlib import pyplot as plt
-from rocketcea.cea_obj_w_units import CEA_Obj
+# from rocketcea.cea_obj_w_units import CEA_Obj
+from pycea import CEA as CEA_Obj
 import numpy as np
 
 from PropTools.Utils.constants import G, R
@@ -74,11 +75,11 @@ class ThrustChamber:
         self.nozzleCorrectionFactor = 1
 
     # Returns a cea object using the unit system seen below
-    def getCEAObject(self) -> CEA_Obj:
+    def getCEAObject(self):
 
         # If facCR (finite area combustor contraction ratio) is not specified, then an infinite area combustor is assumed
         if self.fac == False:
-
+    
             CEAObject = CEA_Obj(oxName=self.ox.ceaName, 
                 fuelName=self.fuel.ceaName, 
                 isp_units = 'sec',
@@ -410,15 +411,3 @@ Exit Area: {exitArea} m^2
         if printResults:
 
             print(results)
-        
-        
-
-        
-        
-        
-        
-        
-        
-        
-        
-
